@@ -2,7 +2,7 @@ import React from 'react'
 import useForm from 'rc-form-hooks'
 
 export default () => {
-  const { getFieldDecorator, validateFields } = useForm<{ a: string }>();
+  const { getFieldDecorator, validateFields } = useForm<{ username: string }>();
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     validateFields()
@@ -10,7 +10,7 @@ export default () => {
   };
   return (
     <form onSubmit={handleSubmit}>
-      {getFieldDecorator('a')(
+      {getFieldDecorator('username')(
         <input type="text"/>
       )}
       <button type={'submit'}>submit</button>

@@ -13,16 +13,24 @@ npm install --save rc-form-hooks
 ## Usage
 
 ```tsx
-import * as React from 'react'
+import React from 'react'
+import useForm from 'rc-form-hooks'
 
-import MyComponent from 'rc-form-hooks'
-
-class Example extends React.Component {
-  render () {
-    return (
-      <MyComponent />
-    )
-  }
+export default () => {
+  const { getFieldDecorator, validateFields } = useForm<{ username: string }>();
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    validateFields()
+      .then(console.log);
+  };
+  return (
+    <form onSubmit={handleSubmit}>
+      {getFieldDecorator('username')(
+        <input type="text"/>
+      )}
+      <button type={'submit'}>submit</button>
+    </form>
+  )
 }
 ```
 
