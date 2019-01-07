@@ -1,6 +1,6 @@
 {
   "name": "rc-form-hooks",
-  "version": "1.0.0",
+  "version": "0.0.1",
   "description": "Use hooks to bind form components to actions such as uniform validation and get values.",
   "author": "mushan0x0",
   "license": "MIT",
@@ -21,7 +21,9 @@
     "predeploy": "cd example && yarn install && yarn run build",
     "deploy": "gh-pages -d example/build"
   },
-  "dependencies": {},
+  "dependencies": {
+    "async-validator": "^1.10.1"
+  },
   "peerDependencies": {
     "prop-types": "^15.5.4",
     "react": "^15.0.0 || ^16.0.0",
@@ -30,14 +32,15 @@
   "devDependencies": {
     "@svgr/rollup": "^2.4.1",
     "@types/jest": "^23.1.5",
-    "@types/react": "^16.3.13",
-    "@types/react-dom": "^16.0.5",
+    "@types/react": "^16.7.18",
+    "@types/react-dom": "^16.0.11",
     "babel-core": "^6.26.3",
+    "babel-jest": "^23.6.0",
     "babel-runtime": "^6.26.0",
     "cross-env": "^5.1.4",
     "gh-pages": "^1.2.0",
-    "react": "^16.4.1",
-    "react-dom": "^16.4.1",
+    "react": "16.7.0-alpha.2",
+    "react-dom": "16.7.0-alpha.2",
     "react-scripts-ts": "^2.16.0",
     "rollup": "^0.62.0",
     "rollup-plugin-babel": "^3.0.7",
@@ -47,7 +50,7 @@
     "rollup-plugin-postcss": "^1.6.2",
     "rollup-plugin-typescript2": "^0.17.0",
     "rollup-plugin-url": "^1.4.0",
-    "typescript": "^2.8.3"
+    "typescript": "^3.2.2"
   },
   "files": [
     "dist"
