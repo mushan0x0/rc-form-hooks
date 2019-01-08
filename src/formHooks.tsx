@@ -2,15 +2,30 @@ import React, { useState, useEffect, useMemo } from 'react';
 const { default: Schema } = require('async-validator');
 
 function validateFields<F>(
-  fields: {
-    [N in keyof F]?: Array<Validator<F>>;
+  { ...fieldsOptions }: {
+    [N in keyof F]: GetFieldDecoratorOptions<F>;
   },
-  values: {
+  { ...values }: {
     [N in keyof F]?: F[N];
   },
+  ns?: Array<keyof F>,
 ) {
   return new Promise((resolve, reject) => {
-    new Schema(fields)
+    ns = ns || (Object.keys(fieldsOptions) as Array<keyof F>);
+    const fieldsRule: {
+      [N in keyof F]?: Array<Validator<F>>;
+    } = {};
+    for (const name in fieldsOptions) {
+      if (ns.includes(name)) {
+        fieldsRule[name] = fieldsOptions[name].rules;
+      }
+    }
+    for (const name in values) {
+      if (!ns.includes(name)) {
+        delete values[name];
+      }
+    }
+    new Schema(fieldsRule)
       .validate(values, (errors: Array<{
         field: keyof F;
         message: string;
@@ -47,8 +62,8 @@ function useForm<V>(createOptions: {
     currentField: keyof V;
   }), []);
   const fieldsOptions: {
-    [N in keyof V]?: GetFieldDecoratorOptions<V>;
-  } = {};
+    [N in keyof V]: GetFieldDecoratorOptions<V>;
+  } = {} as any;
 
   const [errors, setErrors] = useState<{
     [N in keyof V]?: Array<{
@@ -63,11 +78,7 @@ function useForm<V>(createOptions: {
     if (!fieldsChanged[currentField]) {
       return;
     }
-    const { rules = [] } = fieldsOptions[currentField] || {} as any;
-    validateFields(
-      { [currentField]: rules as any },
-      { [currentField]: values[currentField] },
-    )
+    validateFields(fieldsOptions, values, [currentField])
       .then(() => {
         delete errors[currentField];
         setErrors(errors);
@@ -121,21 +132,7 @@ function useForm<V>(createOptions: {
     },
 
     validateFields: (ns) => new Promise(async (resolve, reject) => {
-      const copyFields = { ...fieldsOptions };
-      const copyValues = { ...values };
-      ns = ns || (Object.keys(copyFields) as Array<keyof V>);
-      for (const name in copyFields) {
-        (copyFields[name] as any) = (copyFields[name] || { rules: [] } as any).rules;
-        if (!ns.includes(name)) {
-          delete copyValues[name];
-        }
-      }
-      for (const name in copyValues) {
-        if (!ns.includes(name)) {
-          delete copyValues[name];
-        }
-      }
-      validateFields(copyFields as any, copyValues)
+      validateFields(fieldsOptions, values, ns)
         .then((values) => resolve(values as V))
         .catch((newErrors) => {
           setErrors({
@@ -146,21 +143,26 @@ function useForm<V>(createOptions: {
         });
     }),
 
-    getFieldDecorator: (name, options = {}) => {
+    getFieldDecorator: (name, options = {
+      rules: [{ required: false }],
+    }) => {
       if (fieldsOptions[name]) {
         fieldsOptions[name] = options;
       } else {
         fieldsOptions[name] = options;
-        values[name] = values[name] || options.initialValue;
+        values[name] = values[name]
+        || cacheData.fieldsChanged[name]
+          ? values[name]
+          : options.initialValue;
       }
-      const props: any = getFieldProps(name, options);
-      return (fieldElem: any) => {
+      const props = getFieldProps(name, options);
+      return (fieldElem) => {
         return React.cloneElement(fieldElem, { ...props, onChange: (e: any) => {
-          props.onChange(e);
-          if (fieldElem.props.onChange) {
-            fieldElem.props.onChange(e);
-          }
-        }});
+            props.onChange(e);
+            if (fieldElem.props.onChange) {
+              fieldElem.props.onChange(e);
+            }
+          }} as any);
       };
     },
 
@@ -184,7 +186,7 @@ function useForm<V>(createOptions: {
 export interface FormMethods<V> {
   validateFields: (ns?: Array<keyof V>) => Promise<V>;
   resetFields: (ns?: Array<keyof V>) => void;
-  getFieldDecorator: <P>(
+  getFieldDecorator: <P extends React.InputHTMLAttributes<React.ReactElement<P>>>(
     name: keyof V, options?: GetFieldDecoratorOptions<V>,
   ) => (element: React.ReactElement<P>) => React.ReactElement<P>;
   setFieldsValue: (values: V) => void;
@@ -222,6 +224,7 @@ interface Validator<V> {
   /** custom validate function (Note: callback must be called) */
   validator?: (rule: Validator<V>, value: any, callback: any, source?: any, options?: any) => any;
 }
+
 export interface FormComponentProps<V> {
   form: FormMethods<V>;
 }
