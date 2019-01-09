@@ -12,12 +12,12 @@
     "resolveJsonModule": true,
     "noEmit": true,
     "jsx": "preserve",
-    "plugins": [
-      {
-        "name": "typescript-styled-plugin"
-      }
-    ],
-    "isolatedModules": true
+    "isolatedModules": true,
+    "lib": [
+      "dom",
+      "dom.iterable",
+      "esnext"
+    ]
   },
   "include": [
     "src"
