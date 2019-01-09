@@ -20,11 +20,13 @@ function validateFields<F>(
         fieldsRule[name] = fieldsOptions[name].rules;
       }
     }
+
     for (const name in values) {
       if (!ns.includes(name)) {
         delete values[name];
       }
     }
+
     new Schema(fieldsRule)
       .validate(values, (errors: Array<{
         field: keyof F;
@@ -61,6 +63,7 @@ function useForm<V>(createOptions: {
     };
     currentField: keyof V;
   }), []);
+
   const fieldsOptions: {
     [N in keyof V]: GetFieldDecoratorOptions<V>;
   } = {} as any;
@@ -78,6 +81,7 @@ function useForm<V>(createOptions: {
     if (!fieldsChanged[currentField]) {
       return;
     }
+
     validateFields(fieldsOptions, values, [currentField])
       .then(() => {
         delete errors[currentField];
@@ -96,9 +100,8 @@ function useForm<V>(createOptions: {
     onChange: (e: string | any) => {
       const value = (e && e.target) ? e.target.value : e;
       values[name] = value;
-      setValues({
-        ...values,
-      });
+      setValues(values);
+
       cacheData.currentField = name;
       cacheData.fieldsChanged[name] = true;
       if (createOptions.onValuesChange) {
@@ -114,21 +117,17 @@ function useForm<V>(createOptions: {
   });
 
   return {
-    resetFields: (ns) => {
+    resetFields: (ns = (Object.keys(fieldsOptions) as Array<keyof V>)) => {
       delete cacheData.currentField;
-      if (ns) {
-        ns.forEach((name) => {
-          values[name] = undefined;
-          delete errors[name];
-          delete cacheData.fieldsChanged[name];
-        });
+      ns.forEach((name) => {
+        delete cacheData.fieldsChanged[name];
+
+        values[name] = undefined;
         setValues(values);
+
+        delete errors[name];
         setErrors(errors);
-      } else {
-        setErrors({});
-        setValues({});
-        cacheData.fieldsChanged = {};
-      }
+      });
     },
 
     validateFields: (ns) => new Promise(async (resolve, reject) => {
@@ -146,15 +145,12 @@ function useForm<V>(createOptions: {
     getFieldDecorator: (name, options = {
       rules: [{ required: false }],
     }) => {
-      if (fieldsOptions[name]) {
-        fieldsOptions[name] = options;
-      } else {
-        fieldsOptions[name] = options;
-        values[name] = values[name]
-        || cacheData.fieldsChanged[name]
-          ? values[name]
-          : options.initialValue;
-      }
+      fieldsOptions[name] = options;
+      values[name] = values[name]
+      || cacheData.fieldsChanged[name]
+        ? values[name]
+        : options.initialValue;
+
       const props = getFieldProps(name, options);
       return (fieldElem) => {
         return React.cloneElement(fieldElem, { ...props, onChange: (e: any) => {
@@ -200,6 +196,9 @@ export interface GetFieldDecoratorOptions<V> {
   initialValue?: any;
 }
 
+/**
+ * come from: https://github.com/ant-design/ant-design/blob/master/components/form/Form.tsx
+ */
 interface Validator<V> {
   /** validation error message */
   message?: React.ReactNode;
