@@ -96,8 +96,8 @@ function useForm<V>(createOptions: {
     name: keyof V,
     options: GetFieldDecoratorOptions<V> = {},
   ) => ({
-    value: values[name],
-    onChange: (e: string | any) => {
+    [fieldsOptions[name].valuePropName || 'value']: values[name],
+    [fieldsOptions[name].trigger || 'onChange']: (e: string | any) => {
       const value = (e && e.target) ? e.target.value : e;
       values[name] = value;
       setValues(values);
@@ -151,18 +151,19 @@ function useForm<V>(createOptions: {
         ? values[name]
         : options.initialValue;
 
-      const props = getFieldProps(name, options);
+      const props: any = getFieldProps(name, options);
       return (fieldElem) => {
         return React.cloneElement(fieldElem, { ...props, onChange: (e: any) => {
-            props.onChange(e);
-            if (fieldElem.props.onChange) {
-              fieldElem.props.onChange(e);
+            const { trigger = 'onChange' } = options;
+            props[trigger](e);
+            if ((fieldElem.props as any)[trigger]) {
+              (fieldElem.props as any)[trigger](e);
             }
           }} as any);
       };
     },
 
-    setFieldsValue: setValues,
+    setFieldsValue: ({ ...values }) => setValues(values),
 
     getFieldsValue: (ns) => {
       const result = { ...values };
@@ -185,7 +186,9 @@ export interface FormMethods<V> {
   getFieldDecorator: <P extends React.InputHTMLAttributes<React.ReactElement<P>>>(
     name: keyof V, options?: GetFieldDecoratorOptions<V>,
   ) => (element: React.ReactElement<P>) => React.ReactElement<P>;
-  setFieldsValue: (values: V) => void;
+  setFieldsValue: (values: {
+    [N in keyof V]?: V[N]
+  }) => void;
   getFieldsValue: (ns?: Array<keyof V>) => {
     [N in keyof V]?: V[N];
   };
@@ -194,6 +197,8 @@ export interface FormMethods<V> {
 export interface GetFieldDecoratorOptions<V> {
   rules?: Array<Validator<V>>;
   initialValue?: any;
+  trigger?: string;
+  valuePropName?: string;
 }
 
 /**
