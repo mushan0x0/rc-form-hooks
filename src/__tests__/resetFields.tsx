@@ -19,10 +19,10 @@ const Test = ({ setForm }: { setForm: (form: FormMethods<FormValues>) => void })
   return (
     <form>
       {getFieldDecorator('test1')(
-        <Input type="text"/>
+        <Input type="text"/>,
       )}
       {getFieldDecorator('test2')(
-        <Input type="text"/>
+        <Input type="text"/>,
       )}
       <button onClick={() => resetFields()}>Reset</button>
     </form>
