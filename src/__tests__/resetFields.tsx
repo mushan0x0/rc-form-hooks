@@ -19,10 +19,10 @@ const Test = ({ setForm }: { setForm: (form: FormMethods<FormValues>) => void })
   return (
     <form>
       {getFieldDecorator('test1')(
-        <Input type="text"/>
+        <Input type="text"/>,
       )}
       {getFieldDecorator('test2')(
-        <Input type="text"/>
+        <Input type="text"/>,
       )}
       <button onClick={() => resetFields()}>Reset</button>
     </form>
@@ -35,7 +35,7 @@ describe('Reset fields', () => {
   beforeEach(() => {
     mount(<Test setForm={(f) => form = f}/>);
 
-    const values = { test1: '1', test2: '2' };
+    const values = { test1: '1', test2: '1' };
     form.setFieldsValue(values);
   });
 
