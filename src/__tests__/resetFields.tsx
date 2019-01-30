@@ -35,7 +35,7 @@ describe('Reset fields', () => {
   beforeEach(() => {
     mount(<Test setForm={(f) => form = f}/>);
 
-    const values = { test1: '1', test2: '1' };
+    const values = { test1: '1', test2: '2' };
     form.setFieldsValue(values);
   });
 
