@@ -28,18 +28,20 @@ function validateFields<F>(
     }
 
     new Schema(fieldsRule)
-      .validate(values, (errors: Array<{
-        field: keyof F;
-        message: string;
-      }> | null) => {
+      .validate(values, (
+        errors: Array<{
+          field: keyof F;
+          message: string;
+        }> | null,
+      ) => {
         if (errors) {
           const errorsObj: {
             [N in keyof F]?: [{ message: string }];
           } = {};
-          for (const { field, message } of errors || []) {
+          for (const { field, message } of (errors || [])) {
             errorsObj[field] = [{ message }];
           }
-          reject(errorsObj);
+          reject({ errors: errorsObj, values });
         } else {
           resolve(values);
         }
@@ -49,7 +51,9 @@ function validateFields<F>(
 
 function useForm<V>(createOptions: {
   onValuesChange?: (
-    changedValues: V[keyof V],
+    changedValues: {
+      [N in keyof V]?: V[N];
+    },
     allValues: {
       [N in keyof V]?: V[N];
     },
@@ -87,9 +91,15 @@ function useForm<V>(createOptions: {
         delete errors[currentField];
         setErrors(errors);
       })
-      .catch((error) => {
-        setErrors({ ...errors, ...error });
+      .catch(({ errors: newErrors }) => {
+        setErrors({ ...errors, ...newErrors });
       });
+  }, [JSON.stringify(values)]);
+
+  useEffect(() => {
+    if (createOptions.onValuesChange) {
+      createOptions.onValuesChange(values, values);
+    }
   }, [JSON.stringify(values)]);
 
   const getFieldProps = (
@@ -105,7 +115,9 @@ function useForm<V>(createOptions: {
       cacheData.currentField = name;
       cacheData.fieldsChanged[name] = true;
       if (createOptions.onValuesChange) {
-        createOptions.onValuesChange(value, values);
+        createOptions.onValuesChange({
+          [name]: value,
+        } as typeof values, values);
       }
     },
     ['data-__field']: { errors: errors[name] },
@@ -133,12 +145,12 @@ function useForm<V>(createOptions: {
     validateFields: (ns) => new Promise(async (resolve, reject) => {
       validateFields(fieldsOptions, values, ns)
         .then((values) => resolve(values as V))
-        .catch((newErrors) => {
+        .catch(({ errors: newErrors, values }) => {
           setErrors({
             ...errors,
             ...newErrors,
           });
-          reject({ errors, values });
+          reject({ errors: newErrors, values });
         });
     }),
 
@@ -177,6 +189,8 @@ function useForm<V>(createOptions: {
       }
       return result;
     },
+
+    getFieldValue: (name) => values[name],
   };
 }
 
@@ -192,6 +206,7 @@ export interface FormMethods<V> {
   getFieldsValue: (ns?: Array<keyof V>) => {
     [N in keyof V]?: V[N];
   };
+  getFieldValue: (name: keyof V) => V[keyof V] | undefined;
 }
 
 export interface GetFieldDecoratorOptions<V> {
