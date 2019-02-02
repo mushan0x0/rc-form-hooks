@@ -17,10 +17,10 @@ const Test = ({ setForm }: { setForm: (form: FormMethods<FormValues>) => void })
   return (
     <>
       {getFieldDecorator('test1')(
-        <input type="text"/>
+        <input type="text"/>,
       )}
       {getFieldDecorator('test2')(
-        <input type="text"/>
+        <input type="text"/>,
       )}
     </>
   );
