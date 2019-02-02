@@ -50,16 +50,7 @@ function validateFields<F>(
   });
 }
 
-function useForm<V>(createOptions: {
-  onValuesChange?: (
-    changedValues: {
-      [N in keyof V]?: V[N];
-    },
-    allValues: {
-      [N in keyof V]?: V[N];
-    },
-  ) => void;
-} = {}): FormMethods<V> {
+function useForm<V>(createOptions: CreateOptions<V> = {}): FormMethods<V> {
   const cacheData = useMemo(() => ({
     fieldsChanged: {},
   } as {
@@ -193,6 +184,17 @@ function useForm<V>(createOptions: {
 
     getFieldValue: (name) => values[name],
   };
+}
+
+export interface CreateOptions<V> {
+  onValuesChange?: (
+    changedValues: {
+      [N in keyof V]?: V[N];
+    },
+    allValues: {
+      [N in keyof V]?: V[N];
+    },
+  ) => void;
 }
 
 export interface FormMethods<V> {
