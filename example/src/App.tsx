@@ -1,5 +1,5 @@
-import React from 'react'
-import useForm from 'rc-form-hooks'
+import React from 'react';
+import useForm from 'rc-form-hooks';
 
 export default () => {
   const { getFieldDecorator, validateFields } = useForm<{ username: string }>();
@@ -10,10 +10,12 @@ export default () => {
   };
   return (
     <form onSubmit={handleSubmit}>
-      {getFieldDecorator('username')(
-        <input type="text"/>
+      {getFieldDecorator('username', {
+        rules: [{ message: 'Please Enter UserName', required: true }],
+      })(
+        <input type="text"/>,
       )}
       <button type={'submit'}>submit</button>
     </form>
-  )
-}
+  );
+};

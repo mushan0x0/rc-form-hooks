@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
+import { FIELD_META_PROP, FIELD_DATA_PROP } from './constants';
 let Schema = require('async-validator');
 Schema = Schema.default ? Schema.default : Schema;
 
@@ -112,8 +113,8 @@ function useForm<V>(createOptions: CreateOptions<V> = {}): FormMethods<V> {
         } as typeof values, values);
       }
     },
-    ['data-__field']: { errors: errors[name] },
-    ['data-__meta']: {
+    [FIELD_DATA_PROP]: { errors: errors[name] },
+    [FIELD_META_PROP]: {
       validate: [{
         rules: options.rules,
       }],
