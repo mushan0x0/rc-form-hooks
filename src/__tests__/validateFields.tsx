@@ -1,9 +1,6 @@
 import React from 'react';
 import formHooks, { FormMethods } from '..';
-import { mount, configure } from 'enzyme';
-import Adapter from 'enzyme-adapter-react-16';
-
-configure({ adapter: new Adapter() });
+import { mount } from 'enzyme';
 
 interface FormValues {
   test1: string;
@@ -21,12 +18,12 @@ const Test = ({ setForm }: { setForm: (form: FormMethods<FormValues>) => void })
       {getFieldDecorator('test1', {
         rules: [{
           required: true,
-        }]
+        }],
       })(
-        <input type="text"/>
+        <input type="text"/>,
       )}
       {getFieldDecorator('test2')(
-        <input type="text"/>
+        <input type="text"/>,
       )}
       {getFieldDecorator('test3', {
         rules: [{
@@ -37,23 +34,23 @@ const Test = ({ setForm }: { setForm: (form: FormMethods<FormValues>) => void })
               callback();
             }
           },
-        }]
+        }],
       })(
-        <input type="text"/>
+        <input type="text"/>,
       )}
       {getFieldDecorator('test4', {
         rules: [{
           required: true,
           message: 'test4 message',
-        }]
+        }],
       })(
-        <input type="text"/>
+        <input type="text"/>,
       )}
     </>
   );
 };
 
-describe('Validate fields', () => {
+describe('validateFields', () => {
   let form: FormMethods<FormValues>;
 
   beforeEach(() => {
@@ -65,7 +62,7 @@ describe('Validate fields', () => {
       .catch(({ errors }) => {
         expect(errors.test1.length).toBe(1);
         expect(errors.test1[0].message).toEqual( 'test1 is required');
-      })
+      });
   });
 
   it('Catch the values of', () => {
@@ -74,14 +71,14 @@ describe('Validate fields', () => {
       .catch(({ values, errors }) => {
         expect(values.test2).toBe('1');
         expect(errors.test1[0].message).toEqual( 'test1 is required');
-      })
+      });
   });
 
   it('Custom message', () => {
     return form.validateFields()
       .catch(({ errors }) => {
         expect(errors.test4[0].message).toEqual( 'test4 message');
-      })
+      });
   });
 
   it('Custom names', () => {
@@ -89,7 +86,7 @@ describe('Validate fields', () => {
       .catch(({ errors, values }) => {
         expect(Object.keys(errors).length).toBe( 1);
         expect(Object.keys(values).length).toBe( 3);
-      })
+      });
   });
 
   it('Filter values', () => {
