@@ -5,8 +5,6 @@ import Adapter from 'enzyme-adapter-react-16';
 
 configure({ adapter: new Adapter() });
 
-const Input = (porps: any) => <input {...porps}/>;
-
 interface FormValues {
   test1: string;
   test2: string;
@@ -14,18 +12,17 @@ interface FormValues {
 
 const Test = ({ setForm }: { setForm: (form: FormMethods<FormValues>) => void }) => {
   const form = formHooks<FormValues>();
-  const { getFieldDecorator, resetFields } = form;
+  const { getFieldDecorator } = form;
   setForm(form);
   return (
-    <form>
+    <>
       {getFieldDecorator('test1')(
-        <Input type="text"/>,
+        <input type="text"/>,
       )}
       {getFieldDecorator('test2')(
-        <Input type="text"/>,
+        <input type="text"/>,
       )}
-      <button onClick={() => resetFields()}>Reset</button>
-    </form>
+    </>
   );
 };
 

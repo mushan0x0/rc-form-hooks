@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
-const { default: Schema } = require('async-validator');
+let Schema = require('async-validator');
+Schema = Schema.default ? Schema.default : Schema;
 
 function validateFields<F>(
   { ...fieldsOptions }: {
