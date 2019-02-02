@@ -23,29 +23,24 @@ const Test = ({ setForm }: { setForm: (form: FormMethods<FormValues>) => void })
   );
 };
 
-describe('resetFields', () => {
+describe('getFieldsValue', () => {
   let form: FormMethods<FormValues>;
 
   beforeEach(() => {
     mount(<Test setForm={(f) => form = f}/>);
-
-    const values = { test1: '1', test2: '2' };
-    form.setFieldsValue(values);
+    form.setFieldsValue({ test1: 'test1', test2: 'test2' });
   });
 
-  it('Reset the multiple', () => {
-    form.resetFields();
+  it('Get values', () => {
     expect(form.getFieldsValue()).toEqual({
-      test1: undefined,
-      test2: undefined,
+      test1: 'test1',
+      test2: 'test2',
     });
   });
 
-  it('Reset one', () => {
-    form.resetFields(['test1']);
-    expect(form.getFieldsValue()).toEqual({
-      test1: undefined,
-      test2: '2',
+  it('Get value', () => {
+    expect(form.getFieldsValue(['test1'])).toEqual({
+      test1: 'test1',
     });
   });
 });
