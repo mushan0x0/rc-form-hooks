@@ -1,9 +1,6 @@
 import React from 'react';
 import formHooks, { FormMethods } from '..';
-import { mount, configure } from 'enzyme';
-import Adapter from 'enzyme-adapter-react-16';
-
-configure({ adapter: new Adapter() });
+import { mount } from 'enzyme';
 
 interface FormValues {
   test1: string;
@@ -26,7 +23,7 @@ const Test = ({ setForm }: { setForm: (form: FormMethods<FormValues>) => void })
   );
 };
 
-describe('Reset fields', () => {
+describe('resetFields', () => {
   let form: FormMethods<FormValues>;
 
   beforeEach(() => {
