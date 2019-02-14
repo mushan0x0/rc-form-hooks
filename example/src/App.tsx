@@ -2,7 +2,13 @@ import React from 'react'
 import useForm from 'rc-form-hooks'
 
 export default () => {
-  const { getFieldDecorator, validateFields, getFieldError } = useForm<{ username: string }>();
+  const {
+    getFieldDecorator,
+    validateFields,
+    getFieldError,
+  } = useForm<{
+    username: string;
+  }>();
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     validateFields()
