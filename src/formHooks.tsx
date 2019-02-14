@@ -37,10 +37,10 @@ function validateFields<F>(
       ) => {
         if (errors) {
           const errorsObj: {
-            [N in keyof F]?: [{ message: string }];
+            [N in keyof F]?: [{ message: string, field: keyof F }];
           } = {};
           for (const { field, message } of (errors || [])) {
-            errorsObj[field] = [{ message }];
+            errorsObj[field] = [{ message, field }];
           }
           reject({ errors: errorsObj, values });
         } else {
@@ -66,7 +66,8 @@ function useForm<V>(createOptions: CreateOptions<V> = {}): FormMethods<V> {
 
   const [errors, setErrors] = useState<{
     [N in keyof V]?: Array<{
-      message: string;
+      message: string,
+      field: keyof V,
     }>;
   }>({});
   const [values, setValues] = useState<{
@@ -120,6 +121,18 @@ function useForm<V>(createOptions: CreateOptions<V> = {}): FormMethods<V> {
     },
   });
 
+  const objFilter = (obj: { [N in keyof V]?: any }, ns?: Array<keyof V>) => {
+    if (ns) {
+      (Object.keys(obj) as Array<keyof V>)
+        .forEach((name) => {
+          if (!ns.includes(name)) {
+            delete obj[name];
+          }
+        });
+    }
+    return obj;
+  };
+
   return {
     resetFields: (ns = (Object.keys(fieldsOptions) as Array<keyof V>)) => {
       delete cacheData.currentField;
@@ -171,18 +184,19 @@ function useForm<V>(createOptions: CreateOptions<V> = {}): FormMethods<V> {
 
     getFieldsValue: (ns) => {
       const result = { ...values };
-      if (ns) {
-        (Object.keys(result) as Array<keyof V>)
-          .forEach((name) => {
-            if (!ns.includes(name)) {
-              delete result[name];
-            }
-          });
-      }
+      objFilter(result, ns);
       return result;
     },
 
     getFieldValue: (name) => values[name],
+
+    getFieldsError: (ns) => {
+      const result = { ...errors };
+      objFilter(result, ns);
+      return result;
+    },
+
+    getFieldError: (name): any => errors[name] || [],
   };
 }
 
@@ -209,7 +223,17 @@ export interface FormMethods<V> {
   getFieldsValue: (ns?: Array<keyof V>) => {
     [N in keyof V]?: V[N];
   };
+  getFieldsError: (ns?: Array<keyof V>) => {
+    [N in keyof V]?: Array<{
+      message: string;
+      field: keyof V,
+    }>;
+  };
   getFieldValue: (name: keyof V) => V[keyof V] | undefined;
+  getFieldError: (name: keyof V) => Array<{
+    message: string;
+    field: keyof V,
+  }>;
 }
 
 export interface GetFieldDecoratorOptions<V> {
