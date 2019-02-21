@@ -5,8 +5,8 @@
   "license": "MIT",
   "private": true,
   "dependencies": {
-    "react": "16.7.0-alpha.2",
-    "react-dom": "16.7.0-alpha.2"
+    "react": "^16.8.2",
+    "react-dom": "^16.8.2"
   },
   "scripts": {
     "start": "react-app-rewired start",
@@ -21,9 +21,9 @@
     "not op_mini all"
   ],
   "devDependencies": {
-    "react-app-rewired": "^2.0.1",
     "prop-types": "^15.6.2",
     "rc-form-hooks": "link:..",
+    "react-app-rewired": "^2.0.1",
     "react-scripts": "^2.1.3"
   }
 }
