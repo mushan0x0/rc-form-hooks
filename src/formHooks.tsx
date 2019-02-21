@@ -164,9 +164,9 @@ function useForm<V>(createOptions: CreateOptions<V> = {}): FormMethods<V> {
     }) => {
       fieldsOptions[name] = options;
       values[name] = values[name]
-      || cacheData.fieldsChanged[name]
-        ? values[name]
-        : options.initialValue;
+        || cacheData.fieldsChanged[name]
+          ? values[name]
+          : options.initialValue;
 
       const props: any = getFieldProps(name, options);
       return (fieldElem) => {
@@ -197,6 +197,24 @@ function useForm<V>(createOptions: CreateOptions<V> = {}): FormMethods<V> {
     },
 
     getFieldError: (name): any => errors[name] || [],
+
+    setFields: (fields) => {
+      for (const name in fields) {
+        const { value, errors: errorArr = [] } = fields[name];
+        values[name] = value;
+        setValues(values);
+
+        const fieldErrors = [];
+        for (const { message } of errorArr) {
+          fieldErrors.push({
+            message,
+            field: name,
+          });
+        }
+        errors[name] = fieldErrors;
+        setErrors(errors);
+      }
+    },
   };
 }
 
@@ -234,6 +252,12 @@ export interface FormMethods<V> {
     message: string;
     field: keyof V,
   }>;
+  setFields: (fields: {
+    [N in keyof V]: {
+      value?: V[N];
+      errors?: Error[];
+    };
+  }) => void;
 }
 
 export interface GetFieldDecoratorOptions<V> {
