@@ -82,7 +82,7 @@ function useForm<V>(createOptions: CreateOptions<V> = {}): FormMethods<V> {
     validateFields(fieldsOptions, values, [currentField])
       .then(() => {
         delete errors[currentField];
-        setErrors(errors);
+        setErrors({ ...errors });
       })
       .catch(({ errors: newErrors }) => {
         setErrors({ ...errors, ...newErrors });
@@ -103,7 +103,7 @@ function useForm<V>(createOptions: CreateOptions<V> = {}): FormMethods<V> {
     [fieldsOptions[name].trigger || 'onChange']: (e: string | any) => {
       const value = (e && e.target) ? e.target.value : e;
       values[name] = value;
-      setValues(values);
+      setValues({ ...values });
 
       cacheData.currentField = name;
       cacheData.fieldsChanged[name] = true;
@@ -140,10 +140,10 @@ function useForm<V>(createOptions: CreateOptions<V> = {}): FormMethods<V> {
         delete cacheData.fieldsChanged[name];
 
         values[name] = undefined;
-        setValues(values);
+        setValues({ ...values });
 
         delete errors[name];
-        setErrors(errors);
+        setErrors({ ...errors });
       });
     },
 
@@ -170,8 +170,8 @@ function useForm<V>(createOptions: CreateOptions<V> = {}): FormMethods<V> {
 
       const props: any = getFieldProps(name, options);
       return (fieldElem) => {
-        return React.cloneElement(fieldElem, { ...props, onChange: (e: any) => {
-            const { trigger = 'onChange' } = options;
+        const { trigger = 'onChange' } = options;
+        return React.cloneElement(fieldElem, { ...props, [trigger]: (e: any) => {
             props[trigger](e);
             if ((fieldElem.props as any)[trigger]) {
               (fieldElem.props as any)[trigger](e);
@@ -202,7 +202,7 @@ function useForm<V>(createOptions: CreateOptions<V> = {}): FormMethods<V> {
       for (const name in fields) {
         const { value, errors: errorArr = [] } = fields[name];
         values[name] = value;
-        setValues(values);
+        setValues({ ...values });
 
         const fieldErrors = [];
         for (const { message } of errorArr) {
@@ -212,7 +212,7 @@ function useForm<V>(createOptions: CreateOptions<V> = {}): FormMethods<V> {
           });
         }
         errors[name] = fieldErrors;
-        setErrors(errors);
+        setErrors({ ...errors });
       }
     },
   };
