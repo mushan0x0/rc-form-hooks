@@ -1,4 +1,5 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import * as React from 'react';
+import { useState, useEffect, useMemo } from 'react';
 let Schema = require('async-validator');
 Schema = Schema.default ? Schema.default : Schema;
 
@@ -51,13 +52,13 @@ function validateFields<F>(
 }
 
 function useForm<V>(createOptions: CreateOptions<V> = {}): FormMethods<V> {
-  const cacheData = useMemo(() => ({
-    fieldsChanged: {},
-  } as {
-    fieldsChanged: {
+  const cacheData = useMemo<{
+    fieldsTouched: {
       [N in keyof V]?: boolean;
     };
-    currentField: keyof V;
+    currentField?: keyof V;
+  }>(() => ({
+    fieldsTouched: {},
   }), []);
 
   const fieldsOptions: {
@@ -74,18 +75,24 @@ function useForm<V>(createOptions: CreateOptions<V> = {}): FormMethods<V> {
     [N in keyof V]?: V[N];
   }>({});
   useEffect(() => {
-    const { fieldsChanged, currentField } = cacheData;
-    if (!fieldsChanged[currentField]) {
+    const { fieldsTouched: fieldsChanged, currentField } = cacheData;
+    if (currentField === undefined || !fieldsChanged[currentField]) {
       return;
     }
 
     validateFields(fieldsOptions, values, [currentField])
       .then(() => {
-        delete errors[currentField];
-        setErrors({ ...errors });
+        setErrors(errors => {
+          const errs = { ...errors };
+          delete errs[currentField];
+          return errs;
+        });
       })
       .catch(({ errors: newErrors }) => {
-        setErrors({ ...errors, ...newErrors });
+        setErrors(oldErrors => ({
+           ...oldErrors,
+           ...newErrors,
+        }));
       });
   }, [JSON.stringify(values)]);
 
@@ -106,7 +113,7 @@ function useForm<V>(createOptions: CreateOptions<V> = {}): FormMethods<V> {
       setValues({ ...values });
 
       cacheData.currentField = name;
-      cacheData.fieldsChanged[name] = true;
+      cacheData.fieldsTouched[name] = true;
       if (createOptions.onValuesChange) {
         createOptions.onValuesChange({
           [name]: value,
@@ -137,7 +144,7 @@ function useForm<V>(createOptions: CreateOptions<V> = {}): FormMethods<V> {
     resetFields: (ns = (Object.keys(fieldsOptions) as Array<keyof V>)) => {
       delete cacheData.currentField;
       ns.forEach((name) => {
-        delete cacheData.fieldsChanged[name];
+        delete cacheData.fieldsTouched[name];
 
         values[name] = undefined;
         setValues({ ...values });
@@ -164,7 +171,7 @@ function useForm<V>(createOptions: CreateOptions<V> = {}): FormMethods<V> {
     }) => {
       fieldsOptions[name] = options;
       values[name] = values[name]
-        || cacheData.fieldsChanged[name]
+        || cacheData.fieldsTouched[name]
           ? values[name]
           : options.initialValue;
 
@@ -215,6 +222,10 @@ function useForm<V>(createOptions: CreateOptions<V> = {}): FormMethods<V> {
         setErrors({ ...errors });
       }
     },
+
+    isFieldTouched: (name) => Boolean(cacheData.fieldsTouched[name]),
+
+    isFieldsTouched: (names = []) => names.some(x => Boolean(cacheData.fieldsTouched[x])),
   };
 }
 
@@ -258,6 +269,8 @@ export interface FormMethods<V> {
       errors?: Error[];
     };
   }) => void;
+  isFieldTouched(name: keyof V): boolean;
+  isFieldsTouched(names?: Array<keyof V>): boolean;
 }
 
 export interface GetFieldDecoratorOptions<V> {
