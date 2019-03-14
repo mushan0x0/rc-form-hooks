@@ -54,7 +54,10 @@ function validateFields<F>(
 function useForm<V>(createOptions: CreateOptions<V> = {}): FormMethods<V> {
   const cacheData = useMemo<{
     fieldsTouched: {
-      [N in keyof V]?: boolean;
+      /**
+       * `undefined` means `false` here
+       */
+      [N in keyof V]?: true;
     };
     currentField?: keyof V;
   }>(() => ({
@@ -109,16 +112,23 @@ function useForm<V>(createOptions: CreateOptions<V> = {}): FormMethods<V> {
     [fieldsOptions[name].valuePropName || 'value']: values[name],
     [fieldsOptions[name].trigger || 'onChange']: (e: string | any) => {
       const value = (e && e.target) ? e.target.value : e;
-      values[name] = value;
-      setValues({ ...values });
+      setValues(oldValues => {
+        const values  = {
+          ...oldValues,
+           [name]: value,
+        } as typeof oldValues;
 
-      cacheData.currentField = name;
-      cacheData.fieldsTouched[name] = true;
-      if (createOptions.onValuesChange) {
-        createOptions.onValuesChange({
-          [name]: value,
-        } as typeof values, values);
-      }
+        cacheData.currentField = name;
+        cacheData.fieldsTouched[name] = true;
+        if (createOptions.onValuesChange) {
+            createOptions.onValuesChange({
+              [name]: value,
+            } as typeof values, values);
+          }
+
+        return values;
+      });
+
     },
     ['data-__field']: { errors: errors[name] },
     ['data-__meta']: {
@@ -146,11 +156,13 @@ function useForm<V>(createOptions: CreateOptions<V> = {}): FormMethods<V> {
       ns.forEach((name) => {
         delete cacheData.fieldsTouched[name];
 
-        values[name] = undefined;
-        setValues({ ...values });
+        setValues(values => ({ ...values, [name]: undefined } as typeof values));
 
-        delete errors[name];
-        setErrors({ ...errors });
+        setErrors(oldErrors => {
+          const errors = { ...oldErrors };
+          delete errors[name];
+          return errors;
+        });
       });
     },
 
@@ -158,10 +170,10 @@ function useForm<V>(createOptions: CreateOptions<V> = {}): FormMethods<V> {
       validateFields(fieldsOptions, values, ns)
         .then((values) => resolve(values as V))
         .catch(({ errors: newErrors, values }) => {
-          setErrors({
+          setErrors(errors => ({
             ...errors,
             ...newErrors,
-          });
+          }));
           reject({ errors: newErrors, values });
         });
     }),
@@ -206,21 +218,22 @@ function useForm<V>(createOptions: CreateOptions<V> = {}): FormMethods<V> {
     getFieldError: (name): any => errors[name] || [],
 
     setFields: (fields) => {
-      for (const name in fields) {
-        const { value, errors: errorArr = [] } = fields[name];
-        values[name] = value;
-        setValues({ ...values });
-
-        const fieldErrors = [];
-        for (const { message } of errorArr) {
-          fieldErrors.push({
-            message,
-            field: name,
-          });
+      setValues(oldValues => {
+        const values = { ...oldValues };
+        for (const name in fields) {
+          const { value } = fields[name];
+          values[name] = value;
         }
-        errors[name] = fieldErrors;
-        setErrors({ ...errors });
-      }
+        return values;
+      });
+      setErrors(oldErrors => {
+        const errors = { ...oldErrors };
+        for (const name in fields) {
+          const errorArr   = fields[name].errors || [];
+          errors[name] = errorArr.map(({ message }) => ({ message, field: name }));
+        }
+        return errors;
+      });
     },
 
     isFieldTouched: (name) => Boolean(cacheData.fieldsTouched[name]),
