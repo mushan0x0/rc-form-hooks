@@ -239,6 +239,10 @@ function useForm<V>(createOptions: CreateOptions<V> = {}): FormMethods<V> {
     isFieldTouched: (name) => Boolean(cacheData.fieldsTouched[name]),
 
     isFieldsTouched: (names = []) => names.some(x => Boolean(cacheData.fieldsTouched[x])),
+
+    errors,
+
+    values,
   };
 }
 
@@ -254,6 +258,15 @@ export interface CreateOptions<V> {
 }
 
 export interface FormMethods<V> {
+  errors: {
+    [N in keyof V]?: Array<{
+      message: string,
+      field: keyof V,
+    }>;
+  };
+  values: {
+    [N in keyof V]?: V[N];
+  };
   validateFields: (ns?: Array<keyof V>) => Promise<V>;
   resetFields: (ns?: Array<keyof V>) => void;
   getFieldDecorator: <P extends React.InputHTMLAttributes<React.ReactElement<P>>>(
