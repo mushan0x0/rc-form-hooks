@@ -51,6 +51,17 @@ function validateFields<F>(
   });
 }
 
+export type TypeValues<V> = {
+  [N in keyof V]?: V[N];
+};
+
+export type TypeErrors<V> = {
+  [N in keyof V]?: Array<{
+    message: string,
+    field: keyof V,
+  }>;
+};
+
 function useForm<V>(createOptions: CreateOptions<V> = {}): FormMethods<V> {
   const cacheData = useMemo<{
     fieldsTouched: {
@@ -68,15 +79,8 @@ function useForm<V>(createOptions: CreateOptions<V> = {}): FormMethods<V> {
     [N in keyof V]: GetFieldDecoratorOptions<V>;
   } = {} as any;
 
-  const [errors, setErrors] = useState<{
-    [N in keyof V]?: Array<{
-      message: string,
-      field: keyof V,
-    }>;
-  }>({});
-  const [values, setValues] = useState<{
-    [N in keyof V]?: V[N];
-  }>({});
+  const [errors, setErrors] = useState<TypeErrors<V>>({});
+  const [values, setValues] = useState<TypeValues<V>>({});
   useEffect(() => {
     const { fieldsTouched: fieldsChanged, currentField } = cacheData;
     if (currentField === undefined || !fieldsChanged[currentField]) {
@@ -151,6 +155,10 @@ function useForm<V>(createOptions: CreateOptions<V> = {}): FormMethods<V> {
   };
 
   return {
+    errors,
+
+    values,
+
     resetFields: (ns = (Object.keys(fieldsOptions) as Array<keyof V>)) => {
       delete cacheData.currentField;
       ns.forEach((name) => {
@@ -239,34 +247,19 @@ function useForm<V>(createOptions: CreateOptions<V> = {}): FormMethods<V> {
     isFieldTouched: (name) => Boolean(cacheData.fieldsTouched[name]),
 
     isFieldsTouched: (names = []) => names.some(x => Boolean(cacheData.fieldsTouched[x])),
-
-    errors,
-
-    values,
   };
 }
 
 export interface CreateOptions<V> {
   onValuesChange?: (
-    changedValues: {
-      [N in keyof V]?: V[N];
-    },
-    allValues: {
-      [N in keyof V]?: V[N];
-    },
+    changedValues: TypeValues<V>,
+    allValues: TypeValues<V>,
   ) => void;
 }
 
 export interface FormMethods<V> {
-  errors: {
-    [N in keyof V]?: Array<{
-      message: string,
-      field: keyof V,
-    }>;
-  };
-  values: {
-    [N in keyof V]?: V[N];
-  };
+  errors: TypeErrors<V>;
+  values: TypeValues<V>;
   validateFields: (ns?: Array<keyof V>) => Promise<V>;
   resetFields: (ns?: Array<keyof V>) => void;
   getFieldDecorator: <P extends React.InputHTMLAttributes<React.ReactElement<P>>>(
@@ -275,9 +268,7 @@ export interface FormMethods<V> {
   setFieldsValue: (values: {
     [N in keyof V]?: V[N]
   }) => void;
-  getFieldsValue: (ns?: Array<keyof V>) => {
-    [N in keyof V]?: V[N];
-  };
+  getFieldsValue: (ns?: Array<keyof V>) => TypeValues<V>;
   getFieldsError: (ns?: Array<keyof V>) => {
     [N in keyof V]?: Array<{
       message: string;
