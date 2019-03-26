@@ -5,7 +5,8 @@ export default () => {
   const {
     getFieldDecorator,
     validateFields,
-    getFieldError,
+    errors,
+    values,
   } = useForm<{
     username: string;
   }>();
@@ -28,10 +29,13 @@ export default () => {
         <input type="text"/>
       )}
       <div style={{ color: 'red' }}>
-        {getFieldError('username')
+        {(errors.username || [])
           .map(({ message }) => message)
           .join(',')
         }
+      </div>
+      <div style={{ color: 'blue' }}>
+        {values.username}
       </div>
       <button type={'submit'}>submit</button>
     </form>
