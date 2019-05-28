@@ -198,7 +198,7 @@ function useForm<V>(createOptions: CreateOptions<V> = {}): FormMethods<V> {
       const props: any = getFieldProps(name, options);
       return (fieldElem) => {
         const { trigger = 'onChange' } = options;
-        return React.cloneElement(fieldElem, { ...props, [trigger]: (e: any) => {
+        return React.cloneElement(fieldElem, { ...fieldElem.props, ...props, [trigger]: (e: any) => {
             props[trigger](e);
             if ((fieldElem.props as any)[trigger]) {
               (fieldElem.props as any)[trigger](e);
