@@ -59,33 +59,35 @@ describe('validateFields', () => {
 
   it('Validate one', () => {
     return form.validateFields()
-      .catch(({ errors }) => {
-        expect(errors.test1.length).toBe(1);
-        expect(errors.test1[0].message).toEqual( 'test1 is required');
+      .catch((e) => {
+        const { test1 = [] } = form.errors;
+        expect(test1.length).toBe(1);
+        expect(e.message).toEqual( 'test1 is required');
       });
   });
 
   it('Catch the values of', () => {
     form.setFieldsValue({ test2: '1' });
     return form.validateFields()
-      .catch(({ values, errors }) => {
-        expect(values.test2).toBe('1');
-        expect(errors.test1[0].message).toEqual( 'test1 is required');
+      .catch((e) => {
+        expect(form.values.test2).toBe('1');
+        expect(e.message).toEqual( 'test1 is required');
       });
   });
 
   it('Custom message', () => {
     return form.validateFields()
-      .catch(({ errors }) => {
-        expect(errors.test4[0].message).toEqual( 'test4 message');
+      .catch(() => {
+        const { test4 = [] } = form.errors;
+        expect(test4[0].message).toEqual( 'test4 message');
       });
   });
 
   it('Custom names', () => {
     return form.validateFields(['test2', 'test3', 'test4'])
-      .catch(({ errors, values }) => {
-        expect(Object.keys(errors).length).toBe( 1);
-        expect(Object.keys(values).length).toBe( 3);
+      .catch(() => {
+        expect(Object.keys(form.errors).length).toBe( 1);
+        expect(Object.keys(form.values).length).toBe( 4);
       });
   });
 
@@ -96,9 +98,12 @@ describe('validateFields', () => {
       test4: 'test4',
     } as any);
     return form.validateFields()
-      .then((values: any) => {
-        expect(values).toEqual({
+      .then(() => {
+        expect(form.values).toEqual({
+          test: 'test',
           test1: 'test1',
+          test2: undefined,
+          test3: undefined,
           test4: 'test4',
         });
       });

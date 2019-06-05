@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useRef } from 'react';
 let Schema = require('async-validator');
 Schema = Schema.default ? Schema.default : Schema;
 
@@ -63,7 +63,7 @@ export type TypeErrors<V> = {
 };
 
 function useForm<V>(createOptions: CreateOptions<V> = {}): FormMethods<V> {
-  const cacheData = useMemo<{
+  const cacheData = useRef<{
     fieldsTouched: {
       /**
        * `undefined` means `false` here
@@ -71,9 +71,9 @@ function useForm<V>(createOptions: CreateOptions<V> = {}): FormMethods<V> {
       [N in keyof V]?: true;
     };
     currentField?: keyof V;
-  }>(() => ({
+  }>({
     fieldsTouched: {},
-  }), []);
+  });
 
   const fieldsOptions: {
     [N in keyof V]: GetFieldDecoratorOptions<V>;
@@ -82,7 +82,7 @@ function useForm<V>(createOptions: CreateOptions<V> = {}): FormMethods<V> {
   const [errors, setErrors] = useState<TypeErrors<V>>({});
   const [values, setValues] = useState<TypeValues<V>>({});
   useEffect(() => {
-    const { fieldsTouched: fieldsChanged, currentField } = cacheData;
+    const { current: { fieldsTouched: fieldsChanged, currentField } } = cacheData;
     if (currentField === undefined || !fieldsChanged[currentField]) {
       return;
     }
@@ -101,13 +101,13 @@ function useForm<V>(createOptions: CreateOptions<V> = {}): FormMethods<V> {
            ...newErrors,
         }));
       });
-  }, [JSON.stringify(values)]);
+  }, [JSON.stringify(values), cacheData.current]);
 
   useEffect(() => {
     if (createOptions.onValuesChange) {
       createOptions.onValuesChange(values, values);
     }
-  }, [JSON.stringify(values)]);
+  }, [JSON.stringify(values), createOptions]);
 
   const getFieldProps = (
     name: keyof V,
@@ -122,8 +122,9 @@ function useForm<V>(createOptions: CreateOptions<V> = {}): FormMethods<V> {
            [name]: value,
         } as typeof oldValues;
 
-        cacheData.currentField = name;
-        cacheData.fieldsTouched[name] = true;
+        const { current } = cacheData;
+        current.currentField = name;
+        current.fieldsTouched[name] = true;
         if (createOptions.onValuesChange) {
             createOptions.onValuesChange({
               [name]: value,
@@ -160,9 +161,10 @@ function useForm<V>(createOptions: CreateOptions<V> = {}): FormMethods<V> {
     values,
 
     resetFields: (ns = (Object.keys(fieldsOptions) as Array<keyof V>)) => {
-      delete cacheData.currentField;
+      const { current } = cacheData;
+      delete current.currentField;
       ns.forEach((name) => {
-        delete cacheData.fieldsTouched[name];
+        delete current.fieldsTouched[name];
 
         setValues(values => ({ ...values, [name]: undefined } as typeof values));
 
@@ -177,12 +179,12 @@ function useForm<V>(createOptions: CreateOptions<V> = {}): FormMethods<V> {
     validateFields: (ns) => new Promise(async (resolve, reject) => {
       validateFields(fieldsOptions, values, ns)
         .then((values) => resolve(values as V))
-        .catch(({ errors: newErrors, values }) => {
+        .catch(({ errors: newErrors }) => {
           setErrors(errors => ({
             ...errors,
             ...newErrors,
           }));
-          reject({ errors: newErrors, values });
+          reject(newErrors[Object.keys(newErrors)[0]][0]);
         });
     }),
 
@@ -191,7 +193,7 @@ function useForm<V>(createOptions: CreateOptions<V> = {}): FormMethods<V> {
     }) => {
       fieldsOptions[name] = options;
       values[name] = values[name]
-        || cacheData.fieldsTouched[name]
+        || cacheData.current.fieldsTouched[name]
           ? values[name]
           : options.initialValue;
 
@@ -244,9 +246,9 @@ function useForm<V>(createOptions: CreateOptions<V> = {}): FormMethods<V> {
       });
     },
 
-    isFieldTouched: (name) => Boolean(cacheData.fieldsTouched[name]),
+    isFieldTouched: (name) => Boolean(cacheData.current.fieldsTouched[name]),
 
-    isFieldsTouched: (names = []) => names.some(x => Boolean(cacheData.fieldsTouched[x])),
+    isFieldsTouched: (names = []) => names.some(x => Boolean(cacheData.current.fieldsTouched[x])),
   };
 }
 
