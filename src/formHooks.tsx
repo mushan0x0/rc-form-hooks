@@ -209,7 +209,7 @@ function useForm<V>(createOptions: CreateOptions<V> = {}): FormMethods<V> {
       };
     },
 
-    setFieldsValue: ({ ...values }) => setValues(values),
+    setFieldsValue: ({ ...newWalues }) => setValues({ ...values, ...newWalues }),
 
     getFieldsValue: (ns) => {
       const result = { ...values };

@@ -7,6 +7,7 @@ export default () => {
     validateFields,
     errors,
     values,
+    resetFields,
   } = useForm<{
     username: string;
   }>();
@@ -38,6 +39,14 @@ export default () => {
         {values.username}
       </div>
       <button type={'submit'}>submit</button>
+      <button
+        onClick={e => {
+          e.preventDefault();
+          resetFields();
+        }}
+      >
+        reset
+      </button>
     </form>
   )
 }
