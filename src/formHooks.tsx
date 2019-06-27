@@ -19,7 +19,7 @@ function validateFields<F>(
     } = {};
     for (const name in fieldsOptions) {
       if (ns.includes(name)) {
-        fieldsRule[name] = fieldsOptions[name].rules;
+        fieldsRule[name] = fieldsOptions[name].rules || [];
       }
     }
 
@@ -62,7 +62,7 @@ export type TypeErrors<V> = {
   }>;
 };
 
-function useForm<V>(createOptions: CreateOptions<V> = {}): FormMethods<V> {
+function useForm<V = any>(createOptions: CreateOptions<V> = {}): FormMethods<V> {
   const cacheData = useRef<{
     fieldsTouched: {
       /**
@@ -70,9 +70,13 @@ function useForm<V>(createOptions: CreateOptions<V> = {}): FormMethods<V> {
        */
       [N in keyof V]?: true;
     };
+    fieldsValidated: {
+      [N in keyof V]?: true;
+    };
     currentField?: keyof V;
   }>({
     fieldsTouched: {},
+    fieldsValidated: {},
   });
 
   const fieldsOptions: {
@@ -176,10 +180,24 @@ function useForm<V>(createOptions: CreateOptions<V> = {}): FormMethods<V> {
       });
     },
 
-    validateFields: (ns) => new Promise(async (resolve, reject) => {
+    validateFields: (ns, options = {}) => new Promise(async (resolve, reject) => {
+      const { fieldsValidated } = cacheData.current;
+      if (ns) {
+        ns.forEach((name) => {
+          fieldsValidated[name] = true;
+        });
+      }
+      if (options.force) {
+        Object.keys(fieldsValidated).forEach((name) => {
+          if (fieldsValidated[name]) {
+            delete errors[name];
+          }
+        });
+      }
       validateFields(fieldsOptions, values, ns)
         .then((values) => resolve(values as V))
-        .catch(({ errors: newErrors }) => {
+        .catch((a) => {
+          const { errors: newErrors } = a;
           setErrors(errors => ({
             ...errors,
             ...newErrors,
@@ -209,7 +227,7 @@ function useForm<V>(createOptions: CreateOptions<V> = {}): FormMethods<V> {
       };
     },
 
-    setFieldsValue: ({ ...newWalues }) => setValues({ ...values, ...newWalues }),
+    setFieldsValue: ({ ...newValues }) => setValues({ ...values, ...newValues }),
 
     getFieldsValue: (ns) => {
       const result = { ...values };
@@ -262,7 +280,7 @@ export interface CreateOptions<V> {
 export interface FormMethods<V> {
   errors: TypeErrors<V>;
   values: TypeValues<V>;
-  validateFields: (ns?: Array<keyof V>) => Promise<V>;
+  validateFields: (ns?: Array<keyof V>, options?: ValidateFieldsOptions) => Promise<V>;
   resetFields: (ns?: Array<keyof V>) => void;
   getFieldDecorator: <P extends React.InputHTMLAttributes<React.ReactElement<P>>>(
     name: keyof V, options?: GetFieldDecoratorOptions<V>,
@@ -330,5 +348,16 @@ interface Validator<V> {
 export interface FormComponentProps<V> {
   form: FormMethods<V>;
 }
+
+export declare type ValidateFieldsOptions = {
+  /** 所有表单域是否在第一个校验规则失败后停止继续校验 */
+  // first?: boolean;
+  /** 指定哪些表单域在第一个校验规则失败后停止继续校验 */
+  // firstFields?: string[];
+  /** 已经校验过的表单域，在 validateTrigger 再次被触发时是否再次校验 */
+  force?: boolean;
+  /** 定义 validateFieldsAndScroll 的滚动行为 */
+  // scroll?: DomScrollIntoViewConfig;
+};
 
 export default useForm;

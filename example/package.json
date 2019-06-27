@@ -3,8 +3,9 @@
   "homepage": "https://mushan0x0.github.io/rc-form-hooks",
   "version": "0.0.0",
   "license": "MIT",
-  "private": true,
+  "private": false,
   "dependencies": {
+    "antd": "^3.19.8",
     "react": "^16.8.2",
     "react-dom": "^16.8.2"
   },
