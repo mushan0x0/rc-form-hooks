@@ -164,20 +164,26 @@ function useForm<V = any>(createOptions: CreateOptions<V> = {}): FormMethods<V> 
 
     values,
 
-    resetFields: (ns = (Object.keys(fieldsOptions) as Array<keyof V>)) => {
+    resetFields: (ns) => {
       const { current } = cacheData;
       delete current.currentField;
-      ns.forEach((name) => {
-        delete current.fieldsTouched[name];
+      if (!ns) {
+        setValues(() => ({}));
+        setErrors(() => ({}));
+        Object.keys(current).forEach(name => current[name] = {});
+      } else {
+        ns.forEach((name) => {
+          delete current.fieldsTouched[name];
 
-        setValues(values => ({ ...values, [name]: undefined } as typeof values));
+          setValues(values => ({ ...values, [name]: undefined } as typeof values));
 
-        setErrors(oldErrors => {
-          const errors = { ...oldErrors };
-          delete errors[name];
-          return errors;
+          setErrors(oldErrors => {
+            const errors = { ...oldErrors };
+            delete errors[name];
+            return errors;
+          });
         });
-      });
+      }
     },
 
     validateFields: (ns, options = {}) => new Promise(async (resolve, reject) => {
