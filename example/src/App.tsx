@@ -11,12 +11,14 @@ import {
   Checkbox,
   Button,
   AutoComplete,
+  DatePicker,
 } from 'antd';
 import useForm from 'rc-form-hooks'
 
 import './App.css';
 
 const { Option } = Select;
+const { RangePicker } = DatePicker;
 const AutoCompleteOption = AutoComplete.Option;
 
 const residences = [
@@ -65,6 +67,7 @@ function RegistrationForm() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     form.validateFields().then(() => console.log('Received values of form: ', form.values));
+    console.log(form.values)
   };
 
   const handleConfirmBlur = (e: any) => {
@@ -136,6 +139,9 @@ function RegistrationForm() {
 
   return (
     <Form {...formItemLayout} onSubmit={handleSubmit}>
+      <Form.Item label="Date Range">
+        {getFieldDecorator(['dateRange1', 'dateRange2'])(<RangePicker />)}
+      </Form.Item>
       <Form.Item label="E-mail">
         {getFieldDecorator('email', {
           rules: [

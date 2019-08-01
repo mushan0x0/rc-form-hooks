@@ -114,38 +114,58 @@ function useForm<V = any>(createOptions: CreateOptions<V> = {}): FormMethods<V> 
   }, [JSON.stringify(values), createOptions]);
 
   const getFieldProps = (
-    name: keyof V,
+    name: keyof V | Array<keyof V>,
     options: GetFieldDecoratorOptions<V> = {},
-  ) => ({
-    [fieldsOptions[name].valuePropName || 'value']: values[name],
-    [fieldsOptions[name].trigger || 'onChange']: (e: string | any) => {
-      const value = (e && e.target) ? e.target.value : e;
-      setValues(oldValues => {
-        const values  = {
-          ...oldValues,
-           [name]: value,
-        } as typeof oldValues;
+  ) => {
+    const n = name instanceof Array ? name[0] : name;
+    const {
+      trigger = 'onChange',
+      valuePropName = 'value',
+    } = fieldsOptions[n];
+    const props = {
+      [trigger]: (e: string | any) => {
+        const value = (e && e.target) ? e.target.value : e;
+        setValues(oldValues => {
+          const currentValue: { [N in keyof V]?: V[N] } = {};
+          if (name instanceof Array && value instanceof Array) {
+            name.forEach((n, index) => currentValue[n] = value[index]);
+          } else {
+            currentValue[n] = value;
+          }
+          const values  = {
+            ...oldValues,
+            ...currentValue,
+          } as typeof oldValues;
 
-        const { current } = cacheData;
-        current.currentField = name;
-        current.fieldsTouched[name] = true;
-        if (createOptions.onValuesChange) {
+          const { current } = cacheData;
+          current.currentField = n;
+          current.fieldsTouched[n] = true;
+          if (createOptions.onValuesChange) {
             createOptions.onValuesChange({
-              [name]: value,
+              [n]: value,
             } as typeof values, values);
           }
 
-        return values;
-      });
+          return values;
+        });
 
-    },
-    ['data-__field']: { errors: errors[name] },
-    ['data-__meta']: {
-      validate: [{
-        rules: options.rules,
-      }],
-    },
-  });
+      },
+      ['data-__field']: { errors: errors[n] },
+      ['data-__meta']: {
+        validate: [{
+          rules: options.rules,
+        }],
+      },
+    };
+    if (name instanceof Array) {
+      const value: any = [];
+      name.forEach((n) => {
+        value.push(values[n]);
+      });
+      props[valuePropName] = value;
+    }
+    return props;
+  };
 
   const objFilter = (obj: { [N in keyof V]?: any }, ns?: Array<keyof V>) => {
     if (ns) {
@@ -215,12 +235,18 @@ function useForm<V = any>(createOptions: CreateOptions<V> = {}): FormMethods<V> 
     getFieldDecorator: (name, options = {
       rules: [{ required: false }],
     }) => {
-      fieldsOptions[name] = options;
-      values[name] = values[name]
-        || cacheData.current.fieldsTouched[name]
-          ? values[name]
-          : options.initialValue;
-
+      const setOptions = (name: keyof V) => {
+        fieldsOptions[name] = options;
+        values[name] = values[name]
+          || cacheData.current.fieldsTouched[name]
+            ? values[name]
+            : options.initialValue;
+      };
+      if (name instanceof Array) {
+        name.forEach(n => setOptions(n));
+      } else {
+        setOptions(name as keyof V);
+      }
       const props: any = getFieldProps(name, options);
       return (fieldElem) => {
         const { trigger = 'onChange' } = options;
@@ -289,7 +315,7 @@ export interface FormMethods<V> {
   validateFields: (ns?: Array<keyof V>, options?: ValidateFieldsOptions) => Promise<V>;
   resetFields: (ns?: Array<keyof V>) => void;
   getFieldDecorator: <P extends React.InputHTMLAttributes<React.ReactElement<P>>>(
-    name: keyof V, options?: GetFieldDecoratorOptions<V>,
+    name: keyof V | Array<keyof V>, options?: GetFieldDecoratorOptions<V>,
   ) => (element: React.ReactElement<P>) => React.ReactElement<P>;
   setFieldsValue: (values: {
     [N in keyof V]?: V[N]
