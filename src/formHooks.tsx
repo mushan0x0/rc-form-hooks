@@ -163,6 +163,8 @@ function useForm<V = any>(createOptions: CreateOptions<V> = {}): FormMethods<V> 
         value.push(values[n]);
       });
       props[valuePropName] = value;
+    } else {
+      props[valuePropName] = values[name] as any;
     }
     return props;
   };
