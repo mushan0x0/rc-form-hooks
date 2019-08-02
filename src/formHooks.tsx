@@ -222,6 +222,7 @@ function useForm<V = any>(createOptions: CreateOptions<V> = {}): FormMethods<V> 
           }
         });
       }
+      objFilter(values, ns);
       validateFields(fieldsOptions, values, ns)
         .then((values) => resolve(values as V))
         .catch((a) => {
