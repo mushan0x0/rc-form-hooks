@@ -12,8 +12,9 @@ import {
   Button,
   AutoComplete,
   DatePicker,
+  Transfer
 } from 'antd';
-import useForm from 'rc-form-hooks'
+import useForm from 'rc-form-hooks';
 
 import './App.css';
 
@@ -32,11 +33,11 @@ const residences = [
         children: [
           {
             value: 'xihu',
-            label: 'West Lake',
-          },
-        ],
-      },
-    ],
+            label: 'West Lake'
+          }
+        ]
+      }
+    ]
   },
   {
     value: 'jiangsu',
@@ -48,26 +49,27 @@ const residences = [
         children: [
           {
             value: 'zhonghuamen',
-            label: 'Zhong Hua Men',
-          },
-        ],
-      },
-    ],
-  },
+            label: 'Zhong Hua Men'
+          }
+        ]
+      }
+    ]
+  }
 ];
 
 function RegistrationForm() {
   const [state, setState] = useState({
     confirmDirty: false,
-    autoCompleteResult: [],
+    autoCompleteResult: []
   });
 
   const form = useForm();
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    form.validateFields().then(() => console.log('Received values of form: ', form.values));
-    console.log(form.values)
+    form
+      .validateFields(['transfer'])
+      .then(() => console.log('Received values of form: ', form.values));
   };
 
   const handleConfirmBlur = (e: any) => {
@@ -95,7 +97,9 @@ function RegistrationForm() {
     if (!value) {
       autoCompleteResult = [];
     } else {
-      autoCompleteResult = ['.com', '.org', '.net'].map(domain => `${value}${domain}`);
+      autoCompleteResult = ['.com', '.org', '.net'].map(
+        domain => `${value}${domain}`
+      );
     }
     setState({ ...state, autoCompleteResult });
   };
@@ -105,32 +109,32 @@ function RegistrationForm() {
   const formItemLayout = {
     labelCol: {
       xs: { span: 24 },
-      sm: { span: 8 },
+      sm: { span: 8 }
     },
     wrapperCol: {
       xs: { span: 24 },
-      sm: { span: 16 },
-    },
+      sm: { span: 16 }
+    }
   };
   const tailFormItemLayout = {
     wrapperCol: {
       xs: {
         span: 24,
-        offset: 0,
+        offset: 0
       },
       sm: {
         span: 16,
-        offset: 8,
-      },
-    },
+        offset: 8
+      }
+    }
   };
   const prefixSelector = getFieldDecorator('prefix', {
-    initialValue: '86',
+    initialValue: '86'
   })(
     <Select style={{ width: 70 }}>
-      <Option value="86">+86</Option>
-      <Option value="87">+87</Option>
-    </Select>,
+      <Option value='86'>+86</Option>
+      <Option value='87'>+87</Option>
+    </Select>
   );
 
   const websiteOptions = autoCompleteResult.map(website => (
@@ -139,94 +143,118 @@ function RegistrationForm() {
 
   return (
     <Form {...formItemLayout} onSubmit={handleSubmit}>
-      <Form.Item label="Date Range">
+      <Form.Item label='Transfer'>
+        {getFieldDecorator('transfer', {
+          valuePropName: 'targetKeys'
+        })(
+          <Transfer
+            dataSource={[{ key: '1', title: '1' }, { key: '2', title: '2' }]}
+            render={({ title }) => title}
+          />
+        )}
+      </Form.Item>
+      <Form.Item label='Date Range'>
         {getFieldDecorator(['dateRange1', 'dateRange2'])(<RangePicker />)}
       </Form.Item>
-      <Form.Item label="E-mail">
+      <Form.Item label='E-mail'>
         {getFieldDecorator('email', {
           rules: [
             {
               type: 'email',
-              message: 'The input is not valid E-mail!',
+              message: 'The input is not valid E-mail!'
             },
             {
               required: true,
-              message: 'Please input your E-mail!',
-            },
-          ],
+              message: 'Please input your E-mail!'
+            }
+          ]
         })(<Input />)}
       </Form.Item>
-      <Form.Item label="Password" hasFeedback>
+      <Form.Item label='Password' hasFeedback>
         {getFieldDecorator('password', {
           rules: [
             {
               required: true,
-              message: 'Please input your password!',
+              message: 'Please input your password!'
             },
             {
-              validator: validateToNextPassword,
-            },
-          ],
+              validator: validateToNextPassword
+            }
+          ]
         })(<Input.Password />)}
       </Form.Item>
-      <Form.Item label="Confirm Password" hasFeedback>
+      <Form.Item label='Confirm Password' hasFeedback>
         {getFieldDecorator('confirm', {
           rules: [
             {
               required: true,
-              message: 'Please confirm your password!',
+              message: 'Please confirm your password!'
             },
             {
-              validator: compareToFirstPassword,
-            },
-          ],
+              validator: compareToFirstPassword
+            }
+          ]
         })(<Input.Password onBlur={handleConfirmBlur} />)}
       </Form.Item>
       <Form.Item
         label={
           <span>
             Nickname&nbsp;
-            <Tooltip title="What do you want others to call you?">
-              <Icon type="question-circle-o" />
+            <Tooltip title='What do you want others to call you?'>
+              <Icon type='question-circle-o' />
             </Tooltip>
           </span>
-        }
-      >
+        }>
         {getFieldDecorator('nickname', {
-          rules: [{ required: true, message: 'Please input your nickname!', whitespace: true }],
+          rules: [
+            {
+              required: true,
+              message: 'Please input your nickname!',
+              whitespace: true
+            }
+          ]
         })(<Input />)}
       </Form.Item>
-      <Form.Item label="Habitual Residence">
+      <Form.Item label='Habitual Residence'>
         {getFieldDecorator('residence', {
           initialValue: ['zhejiang', 'hangzhou', 'xihu'],
           rules: [
-            { type: 'array', required: true, message: 'Please select your habitual residence!' },
-          ],
+            {
+              type: 'array',
+              required: true,
+              message: 'Please select your habitual residence!'
+            }
+          ]
         })(<Cascader options={residences} />)}
       </Form.Item>
-      <Form.Item label="Phone Number">
+      <Form.Item label='Phone Number'>
         {getFieldDecorator('phone', {
-          rules: [{ required: true, message: 'Please input your phone number!' }],
+          rules: [
+            { required: true, message: 'Please input your phone number!' }
+          ]
         })(<Input addonBefore={prefixSelector} style={{ width: '100%' }} />)}
       </Form.Item>
-      <Form.Item label="Website">
+      <Form.Item label='Website'>
         {getFieldDecorator('website', {
-          rules: [{ required: true, message: 'Please input website!' }],
+          rules: [{ required: true, message: 'Please input website!' }]
         })(
           <AutoComplete
             dataSource={websiteOptions}
             onChange={handleWebsiteChange}
-            placeholder="website"
-          >
+            placeholder='website'>
             <Input />
-          </AutoComplete>,
+          </AutoComplete>
         )}
       </Form.Item>
-      <Form.Item label="Captcha" extra="We must make sure that your are a human.">
+      <Form.Item
+        label='Captcha'
+        extra='We must make sure that your are a human.'>
         <Row gutter={8}>
           <Col span={12}>
             {getFieldDecorator('captcha', {
-              rules: [{ required: true, message: 'Please input the captcha you got!' }],
+              rules: [
+                { required: true, message: 'Please input the captcha you got!' }
+              ]
             })(<Input />)}
           </Col>
           <Col span={12}>
@@ -236,15 +264,15 @@ function RegistrationForm() {
       </Form.Item>
       <Form.Item {...tailFormItemLayout}>
         {getFieldDecorator('agreement', {
-          valuePropName: 'checked',
+          valuePropName: 'checked'
         })(
           <Checkbox>
-            I have read the <a href="">agreement</a>
-          </Checkbox>,
+            I have read the <a href=''>agreement</a>
+          </Checkbox>
         )}
       </Form.Item>
       <Form.Item {...tailFormItemLayout}>
-        <Button type="primary" htmlType="submit">
+        <Button type='primary' htmlType='submit'>
           Register
         </Button>
       </Form.Item>
@@ -252,4 +280,4 @@ function RegistrationForm() {
   );
 }
 
-export default RegistrationForm
+export default RegistrationForm;

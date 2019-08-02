@@ -24,7 +24,7 @@ function validateFields<F>(
     } = {};
     for (const name in fieldsOptions) {
       if (ns.includes(name)) {
-        fieldsRule[name] = fieldsOptions[name].rules || [];
+        fieldsRule[name] = fieldsOptions[name].rules || [{ required: false }];
       }
     }
 
