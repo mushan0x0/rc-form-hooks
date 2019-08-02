@@ -261,10 +261,7 @@ function useForm<V = any>(createOptions: CreateOptions<V> = {}): FormMethods<V> 
       };
     },
 
-    setFieldsValue: ({ ...newValues }) => {
-      objFilter(newValues, Object.keys(fieldsOptions) as any);
-      setValues({ ...values, ...newValues });
-    },
+    setFieldsValue: ({ ...newValues }) => setValues({ ...values, ...newValues }),
 
     getFieldsValue: (ns) => {
       const result = { ...values };
