@@ -93,14 +93,12 @@ describe('validateFields', () => {
 
   it('Filter values', () => {
     form.setFieldsValue({
-      test: 'test',
       test1: 'test1',
       test4: 'test4',
     } as any);
     return form.validateFields()
       .then(() => {
         expect(form.values).toEqual({
-          test: 'test',
           test1: 'test1',
           test2: undefined,
           test3: undefined,

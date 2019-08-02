@@ -222,7 +222,6 @@ function useForm<V = any>(createOptions: CreateOptions<V> = {}): FormMethods<V> 
           }
         });
       }
-      objFilter(values, ns);
       validateFields(fieldsOptions, values, ns)
         .then((values) => resolve(values as V))
         .catch((a) => {
@@ -262,7 +261,10 @@ function useForm<V = any>(createOptions: CreateOptions<V> = {}): FormMethods<V> 
       };
     },
 
-    setFieldsValue: ({ ...newValues }) => setValues({ ...values, ...newValues }),
+    setFieldsValue: ({ ...newValues }) => {
+      objFilter(newValues, Object.keys(fieldsOptions) as any);
+      setValues({ ...values, ...newValues });
+    },
 
     getFieldsValue: (ns) => {
       const result = { ...values };
