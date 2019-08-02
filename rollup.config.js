@@ -1,13 +1,14 @@
-import typescript from 'rollup-plugin-typescript2'
-import commonjs from 'rollup-plugin-commonjs'
-import external from 'rollup-plugin-peer-deps-external'
+import typescript from 'rollup-plugin-typescript2';
+import commonjs from 'rollup-plugin-commonjs';
+import external from 'rollup-plugin-peer-deps-external';
 // import postcss from 'rollup-plugin-postcss-modules'
-import postcss from 'rollup-plugin-postcss'
-import resolve from 'rollup-plugin-node-resolve'
-import url from 'rollup-plugin-url'
-import svgr from '@svgr/rollup'
+import postcss from 'rollup-plugin-postcss';
+import resolve from 'rollup-plugin-node-resolve';
+import url from 'rollup-plugin-url';
+import svgr from '@svgr/rollup';
+import { eslint } from 'rollup-plugin-eslint';
 
-import pkg from './package.json'
+import pkg from './package.json';
 
 export default {
   input: 'src/index.tsx',
@@ -37,6 +38,7 @@ export default {
       rollupCommonJSResolveHack: true,
       clean: true
     }),
-    commonjs()
+    commonjs(),
+    eslint()
   ]
-}
+};
