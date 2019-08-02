@@ -1,21 +1,26 @@
 import * as React from 'react';
 import { useState, useEffect, useRef } from 'react';
+
 let Schema = require('async-validator');
 Schema = Schema.default ? Schema.default : Schema;
 
 function validateFields<F>(
-  { ...fieldsOptions }: {
+  {
+    ...fieldsOptions
+  }: {
     [N in keyof F]: GetFieldDecoratorOptions<F>;
   },
-  { ...values }: {
+  {
+    ...values
+  }: {
     [N in keyof F]?: F[N];
   },
-  ns?: Array<keyof F>,
+  ns?: (keyof F)[]
 ) {
   return new Promise((resolve, reject) => {
-    ns = ns || (Object.keys(fieldsOptions) as Array<keyof F>);
+    ns = ns || (Object.keys(fieldsOptions) as (keyof F)[]);
     const fieldsRule: {
-      [N in keyof F]?: Array<Validator<F>>;
+      [N in keyof F]?: Validator<F>[];
     } = {};
     for (const name in fieldsOptions) {
       if (ns.includes(name)) {
@@ -29,25 +34,29 @@ function validateFields<F>(
       }
     }
 
-    new Schema(fieldsRule)
-      .validate(values, (
-        errors: Array<{
-          field: keyof F;
-          message: string;
-        }> | null,
+    new Schema(fieldsRule).validate(
+      values,
+      (
+        errors:
+          | {
+              field: keyof F;
+              message: string;
+            }[]
+          | null
       ) => {
         if (errors) {
           const errorsObj: {
-            [N in keyof F]?: [{ message: string, field: keyof F }];
+            [N in keyof F]?: [{ message: string; field: keyof F }];
           } = {};
-          for (const { field, message } of (errors || [])) {
+          for (const { field, message } of errors || []) {
             errorsObj[field] = [{ message, field }];
           }
           reject({ errors: errorsObj, values });
         } else {
           resolve(values);
         }
-      });
+      }
+    );
   });
 }
 
@@ -56,13 +65,15 @@ export type TypeValues<V> = {
 };
 
 export type TypeErrors<V> = {
-  [N in keyof V]?: Array<{
-    message: string,
-    field: keyof V,
-  }>;
+  [N in keyof V]?: {
+    message: string;
+    field: keyof V;
+  }[];
 };
 
-function useForm<V = any>(createOptions: CreateOptions<V> = {}): FormMethods<V> {
+function useForm<V = any>(
+  createOptions: CreateOptions<V> = {}
+): FormMethods<V> {
   const cacheData = useRef<{
     fieldsTouched: {
       /**
@@ -76,7 +87,7 @@ function useForm<V = any>(createOptions: CreateOptions<V> = {}): FormMethods<V> 
     currentField?: keyof V;
   }>({
     fieldsTouched: {},
-    fieldsValidated: {},
+    fieldsValidated: {}
   });
 
   const fieldsOptions: {
@@ -86,7 +97,9 @@ function useForm<V = any>(createOptions: CreateOptions<V> = {}): FormMethods<V> 
   const [errors, setErrors] = useState<TypeErrors<V>>({});
   const [values, setValues] = useState<TypeValues<V>>({});
   useEffect(() => {
-    const { current: { fieldsTouched: fieldsChanged, currentField } } = cacheData;
+    const {
+      current: { fieldsTouched: fieldsChanged, currentField }
+    } = cacheData;
     if (currentField === undefined || !fieldsChanged[currentField]) {
       return;
     }
@@ -101,65 +114,66 @@ function useForm<V = any>(createOptions: CreateOptions<V> = {}): FormMethods<V> 
       })
       .catch(({ errors: newErrors }) => {
         setErrors(oldErrors => ({
-           ...oldErrors,
-           ...newErrors,
+          ...oldErrors,
+          ...newErrors
         }));
       });
-  }, [JSON.stringify(values), cacheData.current]);
+  }, [values, fieldsOptions]);
 
   useEffect(() => {
     if (createOptions.onValuesChange) {
       createOptions.onValuesChange(values, values);
     }
-  }, [JSON.stringify(values), createOptions]);
+  }, [JSON.stringify(values), values, createOptions]);
 
   const getFieldProps = (
-    name: keyof V | Array<keyof V>,
-    options: GetFieldDecoratorOptions<V> = {},
+    name: keyof V | (keyof V)[],
+    options: GetFieldDecoratorOptions<V> = {}
   ) => {
     const n = name instanceof Array ? name[0] : name;
-    const {
-      trigger = 'onChange',
-      valuePropName = 'value',
-    } = fieldsOptions[n];
-    const props = {
+    const { trigger = 'onChange', valuePropName = 'value' } = fieldsOptions[n];
+    const props: any = {
       [trigger]: (e: string | any) => {
-        const value = (e && e.target) ? e.target.value : e;
+        const value = e && e.target ? e.target.value : e;
         setValues(oldValues => {
           const currentValue: { [N in keyof V]?: V[N] } = {};
           if (name instanceof Array && value instanceof Array) {
-            name.forEach((n, index) => currentValue[n] = value[index]);
+            name.forEach((n, index) => (currentValue[n] = value[index]));
           } else {
             currentValue[n] = value;
           }
-          const values  = {
+          const values = {
             ...oldValues,
-            ...currentValue,
+            ...currentValue
           } as typeof oldValues;
 
           const { current } = cacheData;
           current.currentField = n;
           current.fieldsTouched[n] = true;
           if (createOptions.onValuesChange) {
-            createOptions.onValuesChange({
-              [n]: value,
-            } as typeof values, values);
+            createOptions.onValuesChange(
+              {
+                [n]: value
+              } as typeof values,
+              values
+            );
           }
 
           return values;
         });
-
       },
-      ['data-__field']: { errors: errors[n] },
-      ['data-__meta']: {
-        validate: [{
-          rules: options.rules,
-        }],
-      },
+      'data-__field': { errors: errors[n] },
+      'data-__meta': {
+        validate: [
+          {
+            rules: options.rules
+          }
+        ]
+      }
     };
     if (name instanceof Array) {
       const value: any = [];
-      name.forEach((n) => {
+      name.forEach(n => {
         value.push(values[n]);
       });
       props[valuePropName] = value;
@@ -169,14 +183,13 @@ function useForm<V = any>(createOptions: CreateOptions<V> = {}): FormMethods<V> 
     return props;
   };
 
-  const objFilter = (obj: { [N in keyof V]?: any }, ns?: Array<keyof V>) => {
+  const objFilter = (obj: { [N in keyof V]?: any }, ns?: (keyof V)[]) => {
     if (ns) {
-      (Object.keys(obj) as Array<keyof V>)
-        .forEach((name) => {
-          if (!ns.includes(name)) {
-            delete obj[name];
-          }
-        });
+      (Object.keys(obj) as (keyof V)[]).forEach(name => {
+        if (!ns.includes(name)) {
+          delete obj[name];
+        }
+      });
     }
     return obj;
   };
@@ -186,18 +199,20 @@ function useForm<V = any>(createOptions: CreateOptions<V> = {}): FormMethods<V> 
 
     values,
 
-    resetFields: (ns) => {
+    resetFields: ns => {
       const { current } = cacheData;
       delete current.currentField;
       if (!ns) {
         setValues(() => ({}));
         setErrors(() => ({}));
-        Object.keys(current).forEach(name => current[name] = {});
+        Object.keys(current).forEach(name => (current[name] = {}));
       } else {
-        ns.forEach((name) => {
+        ns.forEach(name => {
           delete current.fieldsTouched[name];
 
-          setValues(values => ({ ...values, [name]: undefined } as typeof values));
+          setValues(
+            values => ({ ...values, [name]: undefined } as typeof values)
+          );
 
           setErrors(oldErrors => {
             const errors = { ...oldErrors };
@@ -208,39 +223,43 @@ function useForm<V = any>(createOptions: CreateOptions<V> = {}): FormMethods<V> 
       }
     },
 
-    validateFields: (ns, options = {}) => new Promise(async (resolve, reject) => {
-      const { fieldsValidated } = cacheData.current;
-      if (ns) {
-        ns.forEach((name) => {
-          fieldsValidated[name] = true;
-        });
-      }
-      if (options.force) {
-        Object.keys(fieldsValidated).forEach((name) => {
-          if (fieldsValidated[name]) {
-            delete errors[name];
-          }
-        });
-      }
-      validateFields(fieldsOptions, values, ns)
-        .then((values) => resolve(values as V))
-        .catch((a) => {
-          const { errors: newErrors } = a;
-          setErrors(errors => ({
-            ...errors,
-            ...newErrors,
-          }));
-          reject(newErrors[Object.keys(newErrors)[0]][0]);
-        });
-    }),
+    validateFields: (ns, options = {}) =>
+      new Promise(async (resolve, reject) => {
+        const { fieldsValidated } = cacheData.current;
+        if (ns) {
+          ns.forEach(name => {
+            fieldsValidated[name] = true;
+          });
+        }
+        if (options.force) {
+          Object.keys(fieldsValidated).forEach(name => {
+            if (fieldsValidated[name]) {
+              delete errors[name];
+            }
+          });
+        }
+        validateFields(fieldsOptions, values, ns)
+          .then(values => resolve(values as V))
+          .catch(a => {
+            const { errors: newErrors } = a;
+            setErrors(errors => ({
+              ...errors,
+              ...newErrors
+            }));
+            reject(newErrors[Object.keys(newErrors)[0]][0]);
+          });
+      }),
 
-    getFieldDecorator: (name, options = {
-      rules: [{ required: false }],
-    }) => {
+    getFieldDecorator: (
+      name,
+      options = {
+        rules: [{ required: false }]
+      }
+    ) => {
       const setOptions = (name: keyof V) => {
         fieldsOptions[name] = options;
-        values[name] = values[name]
-          || cacheData.current.fieldsTouched[name]
+        values[name] =
+          values[name] || cacheData.current.fieldsTouched[name]
             ? values[name]
             : options.initialValue;
       };
@@ -250,28 +269,33 @@ function useForm<V = any>(createOptions: CreateOptions<V> = {}): FormMethods<V> 
         setOptions(name as keyof V);
       }
       const props: any = getFieldProps(name, options);
-      return (fieldElem) => {
+      return fieldElem => {
         const { trigger = 'onChange' } = options;
-        return React.cloneElement(fieldElem, { ...fieldElem.props, ...props, [trigger]: (e: any) => {
+        return React.cloneElement(fieldElem, {
+          ...fieldElem.props,
+          ...props,
+          [trigger]: (e: any) => {
             props[trigger](e);
             if ((fieldElem.props as any)[trigger]) {
               (fieldElem.props as any)[trigger](e);
             }
-          }} as any);
+          }
+        } as any);
       };
     },
 
-    setFieldsValue: ({ ...newValues }) => setValues({ ...values, ...newValues }),
+    setFieldsValue: ({ ...newValues }) =>
+      setValues({ ...values, ...newValues }),
 
-    getFieldsValue: (ns) => {
+    getFieldsValue: ns => {
       const result = { ...values };
       objFilter(result, ns);
       return result;
     },
 
-    getFieldValue: (name) => values[name],
+    getFieldValue: name => values[name],
 
-    getFieldsError: (ns) => {
+    getFieldsError: ns => {
       const result = { ...errors };
       objFilter(result, ns);
       return result;
@@ -279,7 +303,7 @@ function useForm<V = any>(createOptions: CreateOptions<V> = {}): FormMethods<V> 
 
     getFieldError: (name): any => errors[name] || [],
 
-    setFields: (fields) => {
+    setFields: fields => {
       setValues(oldValues => {
         const values = { ...oldValues };
         for (const name in fields) {
@@ -291,61 +315,79 @@ function useForm<V = any>(createOptions: CreateOptions<V> = {}): FormMethods<V> 
       setErrors(oldErrors => {
         const errors = { ...oldErrors };
         for (const name in fields) {
-          const errorArr   = fields[name].errors || [];
-          errors[name] = errorArr.map(({ message }) => ({ message, field: name }));
+          const errorArr = fields[name].errors || [];
+          errors[name] = errorArr.map(({ message }) => ({
+            message,
+            field: name
+          }));
         }
         return errors;
       });
     },
 
-    isFieldTouched: (name) => Boolean(cacheData.current.fieldsTouched[name]),
+    isFieldTouched: name => Boolean(cacheData.current.fieldsTouched[name]),
 
-    isFieldsTouched: (names = []) => names.some(x => Boolean(cacheData.current.fieldsTouched[x])),
+    isFieldsTouched: (names = []) =>
+      names.some(x => Boolean(cacheData.current.fieldsTouched[x]))
   };
 }
 
 export interface CreateOptions<V> {
   onValuesChange?: (
     changedValues: TypeValues<V>,
-    allValues: TypeValues<V>,
+    allValues: TypeValues<V>
   ) => void;
 }
 
 export interface FormMethods<V> {
   errors: TypeErrors<V>;
   values: TypeValues<V>;
-  validateFields: (ns?: Array<keyof V>, options?: ValidateFieldsOptions) => Promise<V>;
-  resetFields: (ns?: Array<keyof V>) => void;
-  getFieldDecorator: <P extends React.InputHTMLAttributes<React.ReactElement<P>>>(
-    name: keyof V | Array<keyof V>, options?: GetFieldDecoratorOptions<V>,
+  validateFields: (
+    ns?: (keyof V)[],
+    options?: ValidateFieldsOptions
+  ) => Promise<V>;
+  resetFields: (ns?: (keyof V)[]) => void;
+  getFieldDecorator: <
+    P extends React.InputHTMLAttributes<React.ReactElement<P>>
+  >(
+    name: keyof V | (keyof V)[],
+    options?: GetFieldDecoratorOptions<V>
   ) => (element: React.ReactElement<P>) => React.ReactElement<P>;
-  setFieldsValue: (values: {
-    [N in keyof V]?: V[N]
-  }) => void;
-  getFieldsValue: (ns?: Array<keyof V>) => TypeValues<V>;
-  getFieldsError: (ns?: Array<keyof V>) => {
-    [N in keyof V]?: Array<{
+  setFieldsValue: (
+    values: {
+      [N in keyof V]?: V[N];
+    }
+  ) => void;
+  getFieldsValue: (ns?: (keyof V)[]) => TypeValues<V>;
+  getFieldsError: (
+    ns?: (keyof V)[]
+  ) => {
+    [N in keyof V]?: {
       message: string;
-      field: keyof V,
-    }>;
+      field: keyof V;
+    }[];
   };
   getFieldValue: (name: keyof V) => V[keyof V] | undefined;
-  getFieldError: (name: keyof V) => Array<{
+  getFieldError: (
+    name: keyof V
+  ) => {
     message: string;
-    field: keyof V,
-  }>;
-  setFields: (fields: {
-    [N in keyof V]: {
-      value?: V[N];
-      errors?: Error[];
-    };
-  }) => void;
+    field: keyof V;
+  }[];
+  setFields: (
+    fields: {
+      [N in keyof V]: {
+        value?: V[N];
+        errors?: Error[];
+      };
+    }
+  ) => void;
   isFieldTouched(name: keyof V): boolean;
-  isFieldsTouched(names?: Array<keyof V>): boolean;
+  isFieldsTouched(names?: (keyof V)[]): boolean;
 }
 
 export interface GetFieldDecoratorOptions<V> {
-  rules?: Array<Validator<V>>;
+  rules?: Validator<V>[];
   initialValue?: any;
   trigger?: string;
   valuePropName?: string;
@@ -376,14 +418,20 @@ interface Validator<V> {
   /** transform a value before validation */
   transform?: (value: V) => V;
   /** custom validate function (Note: callback must be called) */
-  validator?: (rule: Validator<V>, value: any, callback: any, source?: any, options?: any) => any;
+  validator?: (
+    rule: Validator<V>,
+    value: any,
+    callback: any,
+    source?: any,
+    options?: any
+  ) => any;
 }
 
 export interface FormComponentProps<V> {
   form: FormMethods<V>;
 }
 
-export declare type ValidateFieldsOptions = {
+export interface ValidateFieldsOptions {
   /** 所有表单域是否在第一个校验规则失败后停止继续校验 */
   // first?: boolean;
   /** 指定哪些表单域在第一个校验规则失败后停止继续校验 */
@@ -392,6 +440,6 @@ export declare type ValidateFieldsOptions = {
   force?: boolean;
   /** 定义 validateFieldsAndScroll 的滚动行为 */
   // scroll?: DomScrollIntoViewConfig;
-};
+}
 
 export default useForm;
