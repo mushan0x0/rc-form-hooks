@@ -90,9 +90,11 @@ function useForm<V = any>(
     fieldsValidated: {}
   });
 
-  const fieldsOptions: {
-    [N in keyof V]: GetFieldDecoratorOptions<V>;
-  } = {} as any;
+  const fieldsOptions = useRef<
+    {
+      [N in keyof V]: GetFieldDecoratorOptions<V>;
+    }
+  >({} as any);
 
   const [errors, setErrors] = useState<TypeErrors<V>>({});
   const [values, setValues] = useState<TypeValues<V>>({});
@@ -104,7 +106,7 @@ function useForm<V = any>(
       return;
     }
 
-    validateFields(fieldsOptions, values, [currentField])
+    validateFields(fieldsOptions.current, values, [currentField])
       .then(() => {
         setErrors(errors => {
           const errs = { ...errors };
@@ -124,14 +126,17 @@ function useForm<V = any>(
     if (createOptions.onValuesChange) {
       createOptions.onValuesChange(values, values);
     }
-  }, [JSON.stringify(values), values, createOptions]);
+  }, [values, createOptions]);
 
   const getFieldProps = (
     name: keyof V | (keyof V)[],
     options: GetFieldDecoratorOptions<V> = {}
   ) => {
     const n = name instanceof Array ? name[0] : name;
-    const { trigger = 'onChange', valuePropName = 'value' } = fieldsOptions[n];
+    const {
+      trigger = 'onChange',
+      valuePropName = 'value'
+    } = fieldsOptions.current[n];
     const props: any = {
       [trigger]: (e: string | any) => {
         const value = e && e.target ? e.target.value : e;
@@ -238,7 +243,7 @@ function useForm<V = any>(
             }
           });
         }
-        validateFields(fieldsOptions, values, ns)
+        validateFields(fieldsOptions.current, values, ns)
           .then(values => resolve(values as V))
           .catch(a => {
             const { errors: newErrors } = a;
@@ -257,7 +262,7 @@ function useForm<V = any>(
       }
     ) => {
       const setOptions = (name: keyof V) => {
-        fieldsOptions[name] = options;
+        fieldsOptions.current[name] = options;
         values[name] =
           values[name] || cacheData.current.fieldsTouched[name]
             ? values[name]
