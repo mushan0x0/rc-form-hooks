@@ -128,78 +128,84 @@ function useForm<V = any>(
     }
   }, [values, createOptions]);
 
-  const getFieldProps = (
-    name: keyof V | (keyof V)[],
-    options: GetFieldDecoratorOptions<V> = {}
-  ) => {
-    const n = name instanceof Array ? name[0] : name;
-    const {
-      trigger = 'onChange',
-      valuePropName = 'value'
-    } = fieldsOptions.current[n];
-    const props: any = {
-      [trigger]: (e: string | any) => {
-        const value = e && e.target ? e.target.value : e;
-        setValues(oldValues => {
-          const currentValue: { [N in keyof V]?: V[N] } = {};
-          if (name instanceof Array && value instanceof Array) {
-            name.forEach((n, index) => (currentValue[n] = value[index]));
-          } else {
-            currentValue[n] = value;
-          }
-          // eslint-disable-next-line @typescript-eslint/no-object-literal-type-assertion
-          const values = {
-            ...oldValues,
-            ...currentValue
-          } as typeof oldValues;
+  const getFieldProps = useCallback(
+    (
+      name: keyof V | (keyof V)[],
+      options: GetFieldDecoratorOptions<V> = {}
+    ) => {
+      const n = name instanceof Array ? name[0] : name;
+      const {
+        trigger = 'onChange',
+        valuePropName = 'value'
+      } = fieldsOptions.current[n];
+      const props: any = {
+        [trigger]: (e: string | any) => {
+          const value = e && e.target ? e.target.value : e;
+          setValues(oldValues => {
+            const currentValue: { [N in keyof V]?: V[N] } = {};
+            if (name instanceof Array && value instanceof Array) {
+              name.forEach((n, index) => (currentValue[n] = value[index]));
+            } else {
+              currentValue[n] = value;
+            }
+            // eslint-disable-next-line @typescript-eslint/no-object-literal-type-assertion
+            const values = {
+              ...oldValues,
+              ...currentValue
+            } as typeof oldValues;
 
-          const { current } = cacheData;
-          current.currentField = n;
-          current.fieldsTouched[n] = true;
-          if (createOptions.onValuesChange) {
-            createOptions.onValuesChange(
-              // eslint-disable-next-line @typescript-eslint/no-object-literal-type-assertion
-              {
-                [n]: value
-              } as typeof values,
-              values
-            );
-          }
+            const { current } = cacheData;
+            current.currentField = n;
+            current.fieldsTouched[n] = true;
+            if (createOptions.onValuesChange) {
+              createOptions.onValuesChange(
+                // eslint-disable-next-line @typescript-eslint/no-object-literal-type-assertion
+                {
+                  [n]: value
+                } as typeof values,
+                values
+              );
+            }
 
-          return values;
-        });
-      },
-      'data-__field': { errors: errors[n] },
-      'data-__meta': {
-        validate: [
-          {
-            rules: options.rules
-          }
-        ]
-      }
-    };
-    if (name instanceof Array) {
-      const value: any = [];
-      name.forEach(n => {
-        value.push(values[n]);
-      });
-      props[valuePropName] = value;
-    } else {
-      props[valuePropName] = values[name] as any;
-    }
-    return props;
-  };
-
-  const objFilter = (obj: { [N in keyof V]?: any }, ns?: (keyof V)[]) => {
-    if (ns) {
-      (Object.keys(obj) as (keyof V)[]).forEach(name => {
-        if (!ns.includes(name)) {
-          delete obj[name];
+            return values;
+          });
+        },
+        'data-__field': { errors: errors[n] },
+        'data-__meta': {
+          validate: [
+            {
+              rules: options.rules
+            }
+          ]
         }
-      });
-    }
-    return obj;
-  };
+      };
+      if (name instanceof Array) {
+        const value: any = [];
+        name.forEach(n => {
+          value.push(values[n]);
+        });
+        props[valuePropName] = value;
+      } else {
+        props[valuePropName] = values[name] as any;
+      }
+      return props;
+    },
+    [createOptions, errors, values]
+  );
+
+  const objFilter = useCallback(
+    (obj: { [N in keyof V]?: any }, ns?: (keyof V)[]) => {
+      if (ns) {
+        (Object.keys(obj) as (keyof V)[]).forEach(name => {
+          if (!ns.includes(name)) {
+            delete obj[name];
+          }
+        });
+      }
+      return obj;
+    },
+    []
+  );
 
   const resetFields = useCallback((ns?: (keyof V)[]) => {
     const { current } = cacheData;
@@ -303,7 +309,7 @@ function useForm<V = any>(
       objFilter(result, ns);
       return result;
     },
-    [values]
+    [objFilter, values]
   );
 
   const getFieldValue = useCallback(name => values[name], [values]);
@@ -314,7 +320,7 @@ function useForm<V = any>(
       objFilter(result, ns);
       return result;
     },
-    [errors]
+    [errors, objFilter]
   );
 
   const getFieldError = useCallback((name): any => errors[name] || [], [
