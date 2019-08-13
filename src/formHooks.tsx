@@ -1,10 +1,10 @@
 import * as React from 'react';
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 
 let Schema = require('async-validator');
 Schema = Schema.default ? Schema.default : Schema;
 
-function validateFields<F>(
+function validate<F>(
   {
     ...fieldsOptions
   }: {
@@ -106,7 +106,7 @@ function useForm<V = any>(
       return;
     }
 
-    validateFields(fieldsOptions.current, values, [currentField])
+    validate(fieldsOptions.current, values, [currentField])
       .then(() => {
         setErrors(errors => {
           const errs = { ...errors };
@@ -147,6 +147,7 @@ function useForm<V = any>(
           } else {
             currentValue[n] = value;
           }
+          // eslint-disable-next-line @typescript-eslint/no-object-literal-type-assertion
           const values = {
             ...oldValues,
             ...currentValue
@@ -157,6 +158,7 @@ function useForm<V = any>(
           current.fieldsTouched[n] = true;
           if (createOptions.onValuesChange) {
             createOptions.onValuesChange(
+              // eslint-disable-next-line @typescript-eslint/no-object-literal-type-assertion
               {
                 [n]: value
               } as typeof values,
@@ -199,36 +201,32 @@ function useForm<V = any>(
     return obj;
   };
 
-  return {
-    errors,
+  const resetFields = useCallback((ns?: (keyof V)[]) => {
+    const { current } = cacheData;
+    delete current.currentField;
+    if (!ns) {
+      setValues(() => ({}));
+      setErrors(() => ({}));
+      Object.keys(current).forEach(name => (current[name] = {}));
+    } else {
+      ns.forEach(name => {
+        delete current.fieldsTouched[name];
 
-    values,
+        setValues(
+          values => ({ ...values, [name]: undefined } as typeof values)
+        );
 
-    resetFields: ns => {
-      const { current } = cacheData;
-      delete current.currentField;
-      if (!ns) {
-        setValues(() => ({}));
-        setErrors(() => ({}));
-        Object.keys(current).forEach(name => (current[name] = {}));
-      } else {
-        ns.forEach(name => {
-          delete current.fieldsTouched[name];
-
-          setValues(
-            values => ({ ...values, [name]: undefined } as typeof values)
-          );
-
-          setErrors(oldErrors => {
-            const errors = { ...oldErrors };
-            delete errors[name];
-            return errors;
-          });
+        setErrors(oldErrors => {
+          const errors = { ...oldErrors };
+          delete errors[name];
+          return errors;
         });
-      }
-    },
+      });
+    }
+  }, []);
 
-    validateFields: (ns, options = {}) =>
+  const validateFields = useCallback(
+    (ns?: (keyof V)[], options = {}): Promise<V> =>
       new Promise(async (resolve, reject) => {
         const { fieldsValidated } = cacheData.current;
         if (ns) {
@@ -243,7 +241,7 @@ function useForm<V = any>(
             }
           });
         }
-        validateFields(fieldsOptions.current, values, ns)
+        validate(fieldsOptions.current, values, ns)
           .then(values => resolve(values as V))
           .catch(a => {
             const { errors: newErrors } = a;
@@ -254,8 +252,11 @@ function useForm<V = any>(
             reject(newErrors[Object.keys(newErrors)[0]][0]);
           });
       }),
+    [errors, values]
+  );
 
-    getFieldDecorator: (
+  const getFieldDecorator = useCallback(
+    (
       name,
       options = {
         rules: [{ required: false }]
@@ -274,7 +275,7 @@ function useForm<V = any>(
         setOptions(name as keyof V);
       }
       const props: any = getFieldProps(name, options);
-      return fieldElem => {
+      return (fieldElem: React.ReactElement) => {
         const { trigger = 'onChange' } = options;
         return React.cloneElement(fieldElem, {
           ...fieldElem.props,
@@ -288,52 +289,85 @@ function useForm<V = any>(
         } as any);
       };
     },
+    [getFieldProps, values]
+  );
 
-    setFieldsValue: ({ ...newValues }) =>
-      setValues({ ...values, ...newValues }),
+  const setFieldsValue = useCallback(
+    ({ ...newValues }) => setValues({ ...values, ...newValues }),
+    [values]
+  );
 
-    getFieldsValue: ns => {
+  const getFieldsValue = useCallback(
+    ns => {
       const result = { ...values };
       objFilter(result, ns);
       return result;
     },
+    [values]
+  );
 
-    getFieldValue: name => values[name],
+  const getFieldValue = useCallback(name => values[name], [values]);
 
-    getFieldsError: ns => {
+  const getFieldsError = useCallback(
+    ns => {
       const result = { ...errors };
       objFilter(result, ns);
       return result;
     },
+    [errors]
+  );
 
-    getFieldError: (name): any => errors[name] || [],
+  const getFieldError = useCallback((name): any => errors[name] || [], [
+    errors
+  ]);
 
-    setFields: fields => {
-      setValues(oldValues => {
-        const values = { ...oldValues };
-        for (const name in fields) {
-          const { value } = fields[name];
-          values[name] = value;
-        }
-        return values;
-      });
-      setErrors(oldErrors => {
-        const errors = { ...oldErrors };
-        for (const name in fields) {
-          const errorArr = fields[name].errors || [];
-          errors[name] = errorArr.map(({ message }) => ({
-            message,
-            field: name
-          }));
-        }
-        return errors;
-      });
-    },
+  const setFields = useCallback(fields => {
+    setValues(oldValues => {
+      const values = { ...oldValues };
+      for (const name in fields) {
+        const { value } = fields[name];
+        values[name] = value;
+      }
+      return values;
+    });
+    setErrors(oldErrors => {
+      const errors = { ...oldErrors };
+      for (const name in fields) {
+        const errorArr = fields[name].errors || [];
+        errors[name] = errorArr.map(({ message }: any) => ({
+          message,
+          field: name
+        }));
+      }
+      return errors;
+    });
+  }, []);
 
-    isFieldTouched: name => Boolean(cacheData.current.fieldsTouched[name]),
+  const isFieldTouched = useCallback(
+    name => Boolean(cacheData.current.fieldsTouched[name]),
+    []
+  );
 
-    isFieldsTouched: (names = []) =>
-      names.some(x => Boolean(cacheData.current.fieldsTouched[x]))
+  const isFieldsTouched = useCallback(
+    (names: (keyof V)[] = []) =>
+      names.some(x => Boolean(cacheData.current.fieldsTouched[x])),
+    []
+  );
+
+  return {
+    errors,
+    values,
+    resetFields,
+    validateFields,
+    getFieldDecorator,
+    setFieldsValue,
+    getFieldsValue,
+    getFieldValue,
+    getFieldsError,
+    getFieldError,
+    setFields,
+    isFieldTouched,
+    isFieldsTouched
   };
 }
 
