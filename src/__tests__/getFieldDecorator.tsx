@@ -21,11 +21,9 @@ const Test = ({ setForm, test1OnChange, test2OnChange }: TestProps) => {
   return (
     <>
       {getFieldDecorator('test1')(
-        <input id={'test1'} type="text" onChange={test1OnChange}/>,
+        <input id={'test1'} type='text' onChange={test1OnChange} />
       )}
-      {getFieldDecorator('test2')(
-        <Switch onChange={test2OnChange}/>,
-      )}
+      {getFieldDecorator('test2')(<Switch onChange={test2OnChange} />)}
     </>
   );
 };
@@ -42,11 +40,11 @@ describe('getFieldDecorator', () => {
   it('Binding form', () => {
     wrapper = mount(
       <Test
-        setForm={(f) => form = f}
-        test1OnChange={(e) => {
+        setForm={f => (form = f)}
+        test1OnChange={e => {
           handleChangeValue = e.target.value;
         }}
-      />,
+      />
     );
 
     const value = '23333';
@@ -58,15 +56,18 @@ describe('getFieldDecorator', () => {
   it('Custom components', () => {
     wrapper = mount(
       <Test
-        setForm={(f) => form = f}
-        test2OnChange={(value) => {
+        setForm={f => (form = f)}
+        test2OnChange={value => {
           handleChangeValue = value;
         }}
-      />,
+      />
     );
 
     const value = true;
-    (wrapper.find(Switch).first().instance().props as any).onChange(value);
+    (wrapper
+      .find(Switch)
+      .first()
+      .instance().props as any).onChange(value);
     expect(handleChangeValue).toBe(value);
     expect(form.getFieldValue('test2')).toBe(value);
   });

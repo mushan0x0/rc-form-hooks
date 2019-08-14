@@ -98,6 +98,10 @@ function useForm<V = any>(
 
   const [errors, setErrors] = useState<TypeErrors<V>>({});
   const [values, setValues] = useState<TypeValues<V>>({});
+  const valuesRef = useRef(values);
+  useEffect(() => {
+    valuesRef.current = values;
+  }, [values]);
   useEffect(() => {
     const {
       current: { fieldsTouched: fieldsChanged, currentField }
@@ -167,6 +171,8 @@ function useForm<V = any>(
               );
             }
 
+            valuesRef.current = values;
+
             return values;
           });
         },
@@ -190,7 +196,7 @@ function useForm<V = any>(
       }
       return props;
     },
-    [createOptions, errors, values]
+    [values, createOptions, errors]
   );
 
   const objFilter = useCallback(
@@ -247,7 +253,7 @@ function useForm<V = any>(
             }
           });
         }
-        validate(fieldsOptions.current, values, ns)
+        validate(fieldsOptions.current, valuesRef.current, ns)
           .then(values => resolve(values as V))
           .catch(a => {
             const { errors: newErrors } = a;
@@ -258,7 +264,7 @@ function useForm<V = any>(
             reject(newErrors[Object.keys(newErrors)[0]][0]);
           });
       }),
-    [errors, values]
+    [errors]
   );
 
   const getFieldDecorator = useCallback(
@@ -270,9 +276,9 @@ function useForm<V = any>(
     ) => {
       const setOptions = (name: keyof V) => {
         fieldsOptions.current[name] = options;
-        values[name] =
-          values[name] || cacheData.current.fieldsTouched[name]
-            ? values[name]
+        valuesRef.current[name] =
+          valuesRef.current[name] || cacheData.current.fieldsTouched[name]
+            ? valuesRef.current[name]
             : options.initialValue;
       };
       if (name instanceof Array) {
@@ -295,24 +301,29 @@ function useForm<V = any>(
         } as any);
       };
     },
-    [getFieldProps, values]
+    [getFieldProps]
   );
 
   const setFieldsValue = useCallback(
-    ({ ...newValues }) => setValues({ ...values, ...newValues }),
-    [values]
+    ({ ...newValues }) =>
+      setValues(oldValues => {
+        const values = { ...oldValues, ...newValues };
+        valuesRef.current = values;
+        return values;
+      }),
+    []
   );
 
   const getFieldsValue = useCallback(
     ns => {
-      const result = { ...values };
+      const result = { ...valuesRef.current };
       objFilter(result, ns);
       return result;
     },
-    [objFilter, values]
+    [objFilter]
   );
 
-  const getFieldValue = useCallback(name => values[name], [values]);
+  const getFieldValue = useCallback(name => valuesRef.current[name], []);
 
   const getFieldsError = useCallback(
     ns => {

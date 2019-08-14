@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   Form,
   Input,
@@ -12,7 +12,8 @@ import {
   Button,
   AutoComplete,
   DatePicker,
-  Transfer
+  Transfer,
+  Radio
 } from 'antd';
 import useForm from 'rc-form-hooks';
 
@@ -104,7 +105,7 @@ function RegistrationForm() {
     setState({ ...state, autoCompleteResult });
   };
 
-  const { getFieldDecorator } = form;
+  const { getFieldDecorator, setFieldsValue, getFieldValue } = form;
   const { autoCompleteResult } = state;
   const formItemLayout = {
     labelCol: {
@@ -141,8 +142,20 @@ function RegistrationForm() {
     <AutoCompleteOption key={website}>{website}</AutoCompleteOption>
   ));
 
+  useEffect(() => {
+    setFieldsValue({ radio: 0, phone: 111111 });
+  }, [getFieldValue, setFieldsValue]);
+
   return (
     <Form {...formItemLayout} onSubmit={handleSubmit}>
+      <Form.Item label='Radio'>
+        {getFieldDecorator('radio')(
+          <Radio.Group>
+            <Radio value={1}>1</Radio>
+            <Radio value={0}>0</Radio>
+          </Radio.Group>
+        )}
+      </Form.Item>
       <Form.Item label='Transfer'>
         {getFieldDecorator('transfer', {
           valuePropName: 'targetKeys'
