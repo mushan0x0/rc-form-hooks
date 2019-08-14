@@ -276,11 +276,12 @@ function useForm<V = any>(
     ) => {
       const setOptions = (name: keyof V) => {
         fieldsOptions.current[name] = options;
-        valuesRef.current[name] =
-          valuesRef.current[name] || cacheData.current.fieldsTouched[name]
-            ? valuesRef.current[name]
+        values[name] =
+          values[name] !== undefined || cacheData.current.fieldsTouched[name]
+            ? values[name]
             : options.initialValue;
       };
+      valuesRef.current = values;
       if (name instanceof Array) {
         name.forEach(n => setOptions(n));
       } else {
@@ -301,7 +302,7 @@ function useForm<V = any>(
         } as any);
       };
     },
-    [getFieldProps]
+    [values, getFieldProps]
   );
 
   const setFieldsValue = useCallback(
