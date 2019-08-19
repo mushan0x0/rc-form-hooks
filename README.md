@@ -35,8 +35,7 @@ export default () => {
   return (
     <form onSubmit={handleSubmit}>
       {getFieldDecorator('username', {
-        required: true,
-        message: 'Please input username!'
+        rules: [{ required: true, message: 'Please input username!' }]
       })(<input type='text' />)}
       <span className={'value'}>{values.username}</span>
       <span className={'error'}>{errors.username.message}</span>
