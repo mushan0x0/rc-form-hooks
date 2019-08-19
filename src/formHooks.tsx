@@ -267,6 +267,8 @@ function useForm<V = any>(
     [errors]
   );
 
+  const reRenderRef = useRef(true);
+  reRenderRef.current = true;
   const getFieldDecorator = useCallback(
     (
       name,
@@ -274,6 +276,10 @@ function useForm<V = any>(
         rules: [{ required: false }]
       }
     ) => {
+      if (reRenderRef.current) {
+        fieldsOptions.current = {} as any;
+        reRenderRef.current = false;
+      }
       const setOptions = (name: keyof V) => {
         fieldsOptions.current[name] = options;
         values[name] =
