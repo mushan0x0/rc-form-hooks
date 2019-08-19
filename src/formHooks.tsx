@@ -219,10 +219,14 @@ function useForm<V = any>(
     if (!ns) {
       setValues(() => ({}));
       setErrors(() => ({}));
-      Object.keys(current).forEach(name => (current[name] = {}));
+      Object.keys(current).forEach(name => {
+        current[name] = {};
+        fieldsOptions.current[name] = {};
+      });
     } else {
       ns.forEach(name => {
         delete current.fieldsTouched[name];
+        fieldsOptions.current[name] = {};
 
         setValues(
           values => ({ ...values, [name]: undefined } as typeof values)
