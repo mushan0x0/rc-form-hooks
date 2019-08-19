@@ -10,6 +10,12 @@
 npm install --save rc-form-hooks
 ```
 
+or
+
+```bash
+yarn add rc-form-hooks
+```
+
 ## Usage
 
 ```tsx
