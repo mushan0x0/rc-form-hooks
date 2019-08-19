@@ -13,25 +13,31 @@ npm install --save rc-form-hooks
 ## Usage
 
 ```tsx
-import React from 'react'
-import useForm from 'rc-form-hooks'
+import React from 'react';
+import useForm from 'rc-form-hooks';
 
 export default () => {
-  const { getFieldDecorator, validateFields } = useForm<{ username: string }>();
+  const { getFieldDecorator, validateFields, errors, values } = useForm<{
+    username: string;
+  }>();
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     validateFields()
-      .then(console.log);
+      .then(console.log)
+      .catch(e => console.error(e.message));
   };
   return (
     <form onSubmit={handleSubmit}>
-      {getFieldDecorator('username')(
-        <input type="text"/>
-      )}
+      {getFieldDecorator('username', {
+        required: true,
+        message: 'Please input username!'
+      })(<input type='text' />)}
+      <span className={'value'}>{values.username}</span>
+      <span className={'error'}>{errors.username.message}</span>
       <button type={'submit'}>submit</button>
     </form>
-  )
-}
+  );
+};
 ```
 
 ## License
