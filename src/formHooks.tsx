@@ -439,7 +439,7 @@ export interface FormMethods<V> {
   }[];
   setFields: (
     fields: {
-      [N in keyof V]: {
+      [N in keyof V]?: {
         value?: V[N];
         errors?: Error[];
       };
