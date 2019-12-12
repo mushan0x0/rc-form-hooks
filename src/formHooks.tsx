@@ -144,7 +144,7 @@ function useForm<V = any>(
       } = fieldsOptions.current[n];
       const props: any = {
         [trigger]: (e: string | any) => {
-          const value = e && e.target ? e.target.value : e;
+          const value = e && e.target ? e.target[valuePropName] : e;
           setValues(oldValues => {
             const currentValue: { [N in keyof V]?: V[N] } = {};
             if (name instanceof Array && value instanceof Array) {

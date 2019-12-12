@@ -1,6 +1,6 @@
 {
   "name": "rc-form-hooks",
-  "version": "0.0.1-alpha.23",
+  "version": "0.0.1-alpha.24",
   "description": "Use hooks to bind form components to actions such as uniform validation and get values.",
   "author": "mushan0x0",
   "license": "MIT",
@@ -51,7 +51,6 @@
     "cross-env": "^5.1.4",
     "enzyme": "^3.8.0",
     "enzyme-adapter-react-16": "^1.8.0",
-    "eslint": "^5.16.0",
     "eslint-config-prettier": "^4.2.0",
     "eslint-config-react-app": "^4.0.1",
     "eslint-plugin-flowtype": "^3.12.2",
