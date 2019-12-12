@@ -105,7 +105,7 @@ function useForm<V = any>(
   const [fieldsValidating, setFieldsValidating] = useState<
     {
       [N in keyof V]: {
-        validating: any;
+        validating: boolean;
         value: any;
       };
     }
