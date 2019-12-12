@@ -409,6 +409,11 @@ function useForm<V = any>(
     []
   );
 
+  const isFieldValidating = useCallback(
+    name => fieldsValidating[name].validating,
+    [fieldsValidating]
+  );
+
   return {
     errors,
     values,
@@ -422,7 +427,8 @@ function useForm<V = any>(
     getFieldError,
     setFields,
     isFieldTouched,
-    isFieldsTouched
+    isFieldsTouched,
+    isFieldValidating
   };
 }
 
@@ -478,6 +484,7 @@ export interface FormMethods<V> {
   ) => void;
   isFieldTouched(name: keyof V): boolean;
   isFieldsTouched(names?: (keyof V)[]): boolean;
+  isFieldValidating(name?: keyof V): boolean;
 }
 
 export interface GetFieldDecoratorOptions<V> {
