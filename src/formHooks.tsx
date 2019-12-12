@@ -102,6 +102,15 @@ function useForm<V = any>(
   useEffect(() => {
     valuesRef.current = values;
   }, [values]);
+  const [fieldsValidating, setFieldsValidating] = useState<
+    {
+      [N in keyof V]: {
+        validating: any;
+        value: any;
+      };
+    }
+  >({} as any);
+  const fieldsValidatingRef = useRef(fieldsValidating);
   useEffect(() => {
     const {
       current: { fieldsTouched: fieldsChanged, currentField }
@@ -110,6 +119,12 @@ function useForm<V = any>(
       return;
     }
 
+    const fieldsValidating = fieldsValidatingRef.current;
+    fieldsValidating[currentField] = {
+      validating: true,
+      value: values[currentField]
+    };
+    setFieldsValidating({ ...fieldsValidating });
     validate(fieldsOptions.current, values, [currentField])
       .then(() => {
         setErrors(errors => {
@@ -123,6 +138,12 @@ function useForm<V = any>(
           ...oldErrors,
           ...newErrors
         }));
+      })
+      .finally(() => {
+        if (values[currentField] === fieldsValidating[currentField].value) {
+          fieldsValidating[currentField].validating = false;
+        }
+        setFieldsValidating({ ...fieldsValidating });
       });
   }, [values, fieldsOptions]);
 
@@ -176,7 +197,11 @@ function useForm<V = any>(
             return values;
           });
         },
-        'data-__field': { errors: errors[n] },
+        'data-__field': {
+          errors: errors[n],
+          validating:
+            fieldsValidating[name instanceof Array ? name[0] : name].validating
+        },
         'data-__meta': {
           validate: [
             {
@@ -196,7 +221,7 @@ function useForm<V = any>(
       }
       return props;
     },
-    [values, createOptions, errors]
+    [values, createOptions, errors, fieldsValidating]
   );
 
   const objFilter = useCallback(
@@ -286,6 +311,12 @@ function useForm<V = any>(
           values[name] !== undefined || cacheData.current.fieldsTouched[name]
             ? values[name]
             : options.initialValue;
+        if (!fieldsValidating[name]) {
+          fieldsValidating[name] = {
+            validating: false,
+            value: values[name]
+          };
+        }
       };
       valuesRef.current = values;
       if (name instanceof Array) {
@@ -308,7 +339,7 @@ function useForm<V = any>(
         } as any);
       };
     },
-    [values, getFieldProps]
+    [fieldsValidating, values, getFieldProps]
   );
 
   const setFieldsValue = useCallback(
