@@ -199,6 +199,7 @@ function useForm<V = any>(
         },
         'data-__field': {
           errors: errors[n],
+          value: values[n],
           validating:
             fieldsValidating[name instanceof Array ? name[0] : name].validating
         },
