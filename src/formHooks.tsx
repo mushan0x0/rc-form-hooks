@@ -147,10 +147,18 @@ function useForm<V = any>(
       });
   }, [values, fieldsOptions]);
 
+  const preValuesRef = useRef(values);
   useEffect(() => {
     if (createOptions.onValuesChange) {
-      createOptions.onValuesChange(values, values);
+      const changedValues = {};
+      Object.keys(values).forEach(key => {
+        if (values[key] !== preValuesRef.current[key]) {
+          changedValues[key] = values[key];
+        }
+      });
+      createOptions.onValuesChange(changedValues, values);
     }
+    preValuesRef.current = { ...values };
   }, [values, createOptions]);
 
   const getFieldProps = useCallback(
