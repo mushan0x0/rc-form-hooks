@@ -339,10 +339,10 @@ function useForm<V = any>(
         return React.cloneElement(fieldElem, {
           ...fieldElem.props,
           ...props,
-          [trigger]: (e: any) => {
-            props[trigger](e);
+          [trigger]: (...arg: any) => {
+            props[trigger](...arg);
             if ((fieldElem.props as any)[trigger]) {
-              (fieldElem.props as any)[trigger](e);
+              (fieldElem.props as any)[trigger](...arg);
             }
           }
         } as any);
