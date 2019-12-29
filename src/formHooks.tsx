@@ -169,11 +169,12 @@ function useForm<V = any>(
       const n = name instanceof Array ? name[0] : name;
       const {
         trigger = 'onChange',
-        valuePropName = 'value'
+        valuePropName = 'value',
+        normalize = (e: any) => (e && e.target ? e.target[valuePropName] : e)
       } = fieldsOptions.current[n];
       const props: any = {
-        [trigger]: (e: string | any) => {
-          const value = e && e.target ? e.target[valuePropName] : e;
+        [trigger]: (...arg: any) => {
+          const value = normalize(...arg);
           setValues(oldValues => {
             const currentValue: { [N in keyof V]?: V[N] } = {};
             if (name instanceof Array && value instanceof Array) {
@@ -501,6 +502,7 @@ export interface GetFieldDecoratorOptions<V> {
   initialValue?: any;
   trigger?: string;
   valuePropName?: string;
+  normalize?: (...arg: any) => any;
 }
 
 /**
