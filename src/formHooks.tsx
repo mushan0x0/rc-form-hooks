@@ -315,11 +315,13 @@ function useForm<V = any>(
         fieldsOptions.current = {} as any;
         reRenderRef.current = false;
       }
-      const setOptions = (name: keyof V) => {
+      const setOptions = (name: keyof V, index?: number) => {
         fieldsOptions.current[name] = options;
         values[name] =
           values[name] !== undefined || cacheData.current.fieldsTouched[name]
             ? values[name]
+            : index !== undefined
+            ? (options.initialValue || [])[index]
             : options.initialValue;
         if (!fieldsValidating[name]) {
           fieldsValidating[name] = {
@@ -330,7 +332,7 @@ function useForm<V = any>(
       };
       valuesRef.current = values;
       if (name instanceof Array) {
-        name.forEach(n => setOptions(n));
+        name.forEach((n, i) => setOptions(n, i));
       } else {
         setOptions(name as keyof V);
       }
