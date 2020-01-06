@@ -426,9 +426,10 @@ function useForm<V = any>(
     [fieldsValidating]
   );
 
-  const errorsArr = useMemo(() => Object.keys(errors).map(key => errors[key]), [
-    errors
-  ]);
+  const errorsArr = useMemo(
+    () => Object.keys(errors).map(key => (errors[key] || []).flat()),
+    [errors]
+  );
 
   return {
     errors,
@@ -458,7 +459,10 @@ export interface CreateOptions<V> {
 
 export interface FormMethods<V> {
   errors: TypeErrors<V>;
-  errorsArr: TypeErrors<V>[keyof V][];
+  errorsArr: {
+    message: string;
+    field: keyof V;
+  }[];
   values: TypeValues<V>;
   validateFields: (
     ns?: (keyof V)[],

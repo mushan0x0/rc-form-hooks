@@ -1,6 +1,6 @@
 {
   "name": "rc-form-hooks",
-  "version": "0.0.1-beta.11",
+  "version": "0.0.1-beta.13",
   "description": "Use hooks to bind form components to actions such as uniform validation and get values.",
   "author": "mushan0x0",
   "license": "MIT",
