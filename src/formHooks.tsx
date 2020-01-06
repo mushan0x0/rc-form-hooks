@@ -427,7 +427,7 @@ function useForm<V = any>(
   );
 
   const errorsArr = useMemo(
-    () => Object.keys(errors).map(key => (errors[key] || []).flat()),
+    () => (Object.keys(errors).map(key => errors[key] || []) as any).flat(),
     [errors]
   );
 
