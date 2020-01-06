@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 
 let Schema = require('async-validator');
 Schema = Schema.default ? Schema.default : Schema;
@@ -426,8 +426,13 @@ function useForm<V = any>(
     [fieldsValidating]
   );
 
+  const errorsArr = useMemo(() => Object.keys(errors).map(key => errors[key]), [
+    errors
+  ]);
+
   return {
     errors,
+    errorsArr,
     values,
     resetFields,
     validateFields,
@@ -453,6 +458,7 @@ export interface CreateOptions<V> {
 
 export interface FormMethods<V> {
   errors: TypeErrors<V>;
+  errorsArr: TypeErrors<V>[keyof V][];
   values: TypeValues<V>;
   validateFields: (
     ns?: (keyof V)[],
