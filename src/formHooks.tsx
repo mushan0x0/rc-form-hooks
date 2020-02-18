@@ -144,6 +144,7 @@ function useForm<V = any>(
           fieldsValidating[currentField].validating = false;
         }
         setFieldsValidating({ ...fieldsValidating });
+        delete cacheData.current.currentField;
       });
   }, [values, fieldsOptions]);
 
