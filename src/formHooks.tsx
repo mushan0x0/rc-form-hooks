@@ -1,6 +1,7 @@
 import * as React from 'react';
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import flatten from 'lodash/flatten';
+import 'promise.prototype.finally';
 
 let Schema = require('async-validator');
 Schema = Schema.default ? Schema.default : Schema;
