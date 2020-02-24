@@ -1,5 +1,6 @@
 import * as React from 'react';
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
+import flatten from 'lodash/flatten';
 
 let Schema = require('async-validator');
 Schema = Schema.default ? Schema.default : Schema;
@@ -428,7 +429,7 @@ function useForm<V = any>(
   );
 
   const errorsArr = useMemo(
-    () => (Object.keys(errors).map(key => errors[key] || []) as any).flat(),
+    () => flatten(Object.keys(errors).map(key => errors[key] || [])),
     [errors]
   );
 
