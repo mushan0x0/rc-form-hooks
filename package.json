@@ -27,7 +27,9 @@
     }
   },
   "dependencies": {
-    "async-validator": "^2.0.1"
+    "async-validator": "^2.0.1",
+    "lodash": "^4.17.15",
+    "promise.prototype.finally": "^3.1.2"
   },
   "peerDependencies": {
     "prop-types": "^15.5.4",
@@ -39,6 +41,7 @@
     "@types/enzyme": "^3.1.16",
     "@types/enzyme-adapter-react-16": "^1.0.3",
     "@types/jest": "^23.1.5",
+    "@types/lodash": "^4.14.149",
     "@types/react": "^16.8.4",
     "@types/react-dom": "^16.8.2",
     "@typescript-eslint/eslint-plugin": "^1.9.0",
