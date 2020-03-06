@@ -1,7 +1,6 @@
 import * as React from 'react';
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import flatten from 'lodash/flatten';
-import 'promise.prototype.finally';
 
 let Schema = require('async-validator');
 Schema = Schema.default ? Schema.default : Schema;
@@ -126,28 +125,37 @@ function useForm<V = any>(
       validating: true,
       value: values[currentField]
     };
-    setFieldsValidating({ ...fieldsValidating });
-    validate(fieldsOptions.current, values, [currentField])
-      .then(() => {
+
+    async function validateCurrentField() {
+      if (currentField === undefined || !fieldsChanged[currentField]) {
+        return;
+      }
+
+      try {
+        await validate(fieldsOptions.current, values, [currentField]);
+
         setErrors(errors => {
           const errs = { ...errors };
           delete errs[currentField];
           return errs;
         });
-      })
-      .catch(({ errors: newErrors }) => {
+      } catch ({ errors: newErrors }) {
         setErrors(oldErrors => ({
           ...oldErrors,
           ...newErrors
         }));
-      })
-      .finally(() => {
+      } finally {
         if (values[currentField] === fieldsValidating[currentField].value) {
           fieldsValidating[currentField].validating = false;
         }
         setFieldsValidating({ ...fieldsValidating });
         delete cacheData.current.currentField;
-      });
+      }
+    }
+
+    setFieldsValidating({ ...fieldsValidating });
+
+    validateCurrentField();
   }, [values, fieldsOptions]);
 
   const preValuesRef = useRef(values);
