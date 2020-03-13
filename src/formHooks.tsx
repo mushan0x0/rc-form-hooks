@@ -354,10 +354,10 @@ function useForm<V = any>(
           ...fieldElem.props,
           ...props,
           [trigger]: (...arg: any) => {
-            props[trigger](...arg);
             if ((fieldElem.props as any)[trigger]) {
               (fieldElem.props as any)[trigger](...arg);
             }
+            props[trigger](...arg);
           }
         } as any);
       };
