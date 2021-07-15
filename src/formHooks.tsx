@@ -72,6 +72,8 @@ export type TypeErrors<V> = {
   }[];
 };
 
+type triggerFn = (...arg: any[]) => void;
+
 function useForm<V = any>(
   createOptions: CreateOptions<V> = {}
 ): FormMethods<V> {
@@ -85,10 +87,14 @@ function useForm<V = any>(
     fieldsValidated: {
       [N in keyof V]?: true;
     };
+    fieldsTrigger: {
+      [N in keyof V]?: triggerFn;
+    };
     currentField?: keyof V;
   }>({
     fieldsTouched: {},
-    fieldsValidated: {}
+    fieldsValidated: {},
+    fieldsTrigger: {}
   });
 
   const fieldsOptions = useRef<
@@ -350,15 +356,19 @@ function useForm<V = any>(
       const props: any = getFieldProps(name, options);
       return (fieldElem: React.ReactElement) => {
         const { trigger = 'onChange' } = options;
-        return React.cloneElement(fieldElem, {
-          ...fieldElem.props,
-          ...props,
-          [trigger]: (...arg: any) => {
+        let triggerFn = (cacheData as any).current.fieldsTrigger[name];
+        if (!triggerFn && cacheData) {
+          triggerFn = cacheData.current.fieldsTrigger[name] = (...arg: any) => {
             if ((fieldElem.props as any)[trigger]) {
               (fieldElem.props as any)[trigger](...arg);
             }
             props[trigger](...arg);
-          }
+          };
+        }
+        return React.cloneElement(fieldElem, {
+          ...fieldElem.props,
+          ...props,
+          [trigger]: triggerFn
         } as any);
       };
     },
