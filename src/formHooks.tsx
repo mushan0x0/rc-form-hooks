@@ -164,20 +164,6 @@ function useForm<V = any>(
     validateCurrentField();
   }, [values, fieldsOptions]);
 
-  const preValuesRef = useRef(values);
-  useEffect(() => {
-    if (createOptions.onValuesChange) {
-      const changedValues = {};
-      Object.keys(values).forEach(key => {
-        if (values[key] !== preValuesRef.current[key]) {
-          changedValues[key] = values[key];
-        }
-      });
-      createOptions.onValuesChange(changedValues, values);
-    }
-    preValuesRef.current = { ...values };
-  }, [values, createOptions]);
-
   const getFieldProps = useCallback(
     (
       name: keyof V | (keyof V)[],
@@ -217,7 +203,6 @@ function useForm<V = any>(
                 values
               );
             }
-
             valuesRef.current = values;
 
             return values;
